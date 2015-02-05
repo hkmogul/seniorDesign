@@ -10,13 +10,12 @@ class simpleapp_tk(Tkinter.Tk):
         self.parent = parent
         timerStarted = False
         # global hitStack
-        # hitStack = np.empty([0,4])
         global startTime
         self.initialize()
     def click(event, event1):
-        nowTime= datetime.now().microsecond
+        nowTime= datetime.now()
         vel = 50
-        print "Position: {0}, {1} \nDelta Time: {2} \n ".format(event1.x, event1.y, (startTime-nowTime))
+        print "Position: {0}, {1} \nDelta Time: {2} \n ".format(event1.x, event1.y, (nowTime-startTime))
         # hitStack = np.vstack((hitStack, np.array([(startTime-nowTime), 50,event1.x, event1.y])))
         # print hitStack.shape
 
@@ -48,7 +47,10 @@ class simpleapp_tk(Tkinter.Tk):
     #         startVar.set("START")
 if __name__ == "__main__":
     global startTime
-    startTime = datetime.now().microsecond
+    global hitStack
+    startTime = datetime.now()
+    # hitStack = np.empty([0,4])
+    # print hitStack.shape
     app = simpleapp_tk(None)
     app.title('Poop Emoji Here')
     app.mainloop()
