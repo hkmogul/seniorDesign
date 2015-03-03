@@ -6,7 +6,7 @@ import numpy as np
 import time
 import datetime
 import serial
-
+# TODO: possibly create module of shared information that every script imports?
 ''' Parse string from arduino serial monitor to return location, velocity,
     time, etc
     Example expected string to parse would be: '01-1056'= northwest velocity = 56
