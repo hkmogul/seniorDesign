@@ -6,7 +6,8 @@ import numpy as np
 import time
 import datetime
 import serial
-# TODO: possibly create module of shared information that every script imports?
+import config
+
 ''' Parse string from arduino serial monitor to return location, velocity,
     time, etc
     Example expected string to parse would be: '01-1056'= northwest velocity = 56
@@ -29,13 +30,13 @@ def parseInput(input = None, timeStart):
 def openComm(address = None, baud = None, hitStack = None):
     timeStart = time.time()
     if address is None:
-        ser = serial('/dev/tty.usbmodem1411', 9600)
+        ser = serial('/dev/tty.usbmodem1411', 9600, timeout = 0)
     else:
-        ser = serial(address, baud,timeout = 1)
+        ser = serial(address, baud,timeout = 0)
     # TODO: how does this pass values out?, input argument of numpy array?
     if hitStack is None:
         # code for print and parse goes here
-        while True:
+        while config.recording:
             info = serial.readline()
             if info is not None:
                     time, x, y, vel = parseInput(info, timeStart)
@@ -43,5 +44,12 @@ def openComm(address = None, baud = None, hitStack = None):
                     print "Time: {0} \nPosition: {1},{2}\n Velocity: {3}".format(time, x, y, vel)
                     print "-----"
     else:
-        global hitStack
+        while config.recording:
+            info = serial.readline()
+            if info is not None:
+                time, x, y, vel = parseInput(info, timeStart)
+                config.userHits = np.hstack((config.userHits, np.array([time;vel;x;y])))
+    # when done, close out connection
+    ser.close()
+
         # hopefully vstacking this will work
