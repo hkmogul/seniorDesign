@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+import config
+
 # analysis functions for analyzing the output of
 
 ''' Utility for turning raw data into signal stream (default resolution = 1ms)
@@ -37,36 +39,67 @@ def pad_lesser(gt, data):
         gt = np.hstack((gt, pad))
     return gt, data
 
+#
+# ''' Compares ground truth and data signal, and returns 2 arrays
+#     One corresponds to errors in ground truths (data stream not signal)
+#     Other is extra hits
+#     error = window to check around (default = 10ms)
+# '''
+#
+# def grade_perf(gt, data, error =50):
+#     # DELETE DATA POINTS AS YOU GO
+#     data_temp = data
+#     results = np.zeros(gt.shape)
+#     for i in xrange(10,gt.shape[1]):
+#         # time = i in milliseconds
+#         found = False
+#         foundIn = 0
+#         # find if there is a signal in the data that is within the error window
+#         for j in xrange(-1*error, error+1):
+#             if data_temp[1][i+j] is not 0:
+#                 found = True
+#                 foundIn = i+j
+#                 break
+#         if found is True:
+#             timeError = i - foundIn
+#             velError = gt[1][i] - data_temp[1][foundIn]
+#             xError = gt[2][i] - data_temp[2][foundIn]
+#             # yError = gt[3][i] - data_temp[3][foundIn]
+#             # delete data point so it isnt double counted- set to 0 to not mess with timestamps
+#             data_temp[:][foundIn] = np.zeros()
+#         else:
+#             timeError = -15
+#
+#     results =
+#     return results
 
-''' Compares ground truth and data signal, and returns 2 arrays
-    One corresponds to errors in ground truths (data stream not signal)
-    Other is extra hits
-    error = window to check around (default = 10ms)
+
+''' Returns error on each hit from ground truth in 4xN array of error of each
+    AKA not time based array
+    Missed hit = time error of -1000
+    Error argument = window to allow checking for time things around an area
+    (in milliseconds)
+    gt = ground truth
+    data= user input
 '''
-
-def grade_perf(gt, data, error =50):
-    # DELETE DATA POINTS AS YOU GO
-    data_temp = data
+def gradeRef(gt, data, error = 50):
     results = np.zeros(gt.shape)
-    for i in xrange(10,gt.shape[1]):
-        # time = i in milliseconds
+    found = False
+    for i in xrange(gt.shape[1]):
         found = False
-        foundIn = 0
-        # find if there is a signal in the data that is within the error window
-        for j in xrange(-1*error, error+1):
-            if data_temp[1][i+j] is not 0:
+        # check error window for a hit in that timeframe (by checking velocity)
+        for j in xrange(data.shape[1]):
+            if abs(data[0][j] - gt[0][i]) <= error:
+                # then its a hit!
+                results[0][i] = gt[0][i] - data[0][j]
+                results[1][i] = gt[1][i] - data[1][j]
+                results[2][i] = gt[2][i] - data[2][j]
+                results[3][i] = gt[3][i] - data[3][j]
                 found = True
-                foundIn = i+j
-                break
-        if found is True:
-            timeError = i - foundIn
-            velError = gt[1][i] - data_temp[1][foundIn]
-            xError = gt[2][i] - data_temp[2][foundIn]
-            yError = gt[3][i] - data_temp[3][foundIn]
-            # delete data point so it isnt double counted- set to 0 to not mess with timestamps
-            data_temp[:][foundIn] = np.zeros()
-        else:
-            timeError = -15
-
-
-    return results
+                # delete this hit so its not double counted
+                data = np.delete(data, j, 1)
+                break;
+        if not found:
+            results[0][i] = -1000
+    # return results and remaining data to denote extra hits
+    return results, data
