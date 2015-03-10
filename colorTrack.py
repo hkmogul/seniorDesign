@@ -3,6 +3,13 @@
 import cv2
 import numpy as np
 
+
+def findPosition(mask):
+    points = np.where(mask)
+    return np.mean(points[0]), np.mean(points[1])
+
+
+
 cap = cv2.VideoCapture(0)
 cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
 cv2.namedWindow('mask', cv2.WINDOW_NORMAL)
@@ -15,12 +22,12 @@ while(1):
     # Convert BGR to HSV
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    # define range of blue color in HSV
-    lower_blue = np.array([8,174,199])
-    upper_blue = np.array([15,255,255])
+    # define range of orange color in HSV
+    lower_orange = np.array([7,175,175])
+    upper_orange = np.array([15,255,255])
 
     # Threshold the HSV image to get only blue colors
-    mask = cv2.inRange(hsv, lower_blue, upper_blue)
+    mask = cv2.inRange(hsv, lower_orange, upper_orange)
     # Bitwise-AND mask and original image
     res = cv2.bitwise_and(frame,frame, mask= mask)
 
@@ -28,7 +35,8 @@ while(1):
     # cv2.resizeWindow('frame', 500,500)
     cv2.imshow('mask',mask)
     # cv2.resizeWindow('mask', 500,500)
-
+    y, x = findPosition(mask)
+    print "X: {0}, Y: {1}".format(x, y)
     cv2.imshow('res',res)
     # cv2.resizeWindow('res', 500,500)
 
