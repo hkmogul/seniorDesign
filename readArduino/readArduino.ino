@@ -32,15 +32,20 @@ int sensorPin2 = A1;
 int ledPin = 13;      // select the pin for the LED
 int sensorValue = 0;  // variable to store the value coming from the sensor
 int sensorValue2 = 0;
-int threshold = 750;
+int threshold = 500;
 int sensorPrev = 0;
 int sensorPrev2 = 0;
-int thresh2 = 100;
-
+int thresh2 = -50; // slope for 
+float elapsedTime = 1;
+int currentTime;
+long slope;
+int hits;
 void setup() {
   // declare the ledPin as an OUTPUT:
   pinMode(ledPin, OUTPUT);
   Serial.begin(9600);
+  currentTime = millis();
+  hits = 0;
 }
 
 void loop() {
@@ -48,23 +53,37 @@ void loop() {
   digitalWrite(ledPin, LOW);
   sensorValue = analogRead(sensorPin);
   sensorValue2 = analogRead(sensorPin2);
+  elapsedTime = micros()/1000.0-(float) currentTime;
+//  Serial.println(elapsedTime);
+  slope = (sensorPrev-sensorValue)/(long) elapsedTime;
   // turn the ledPin on
-  if(sensorValue < threshold && abs(sensorPrev-sensorValue) > thresh2){
+//  if(sensorValue < threshold && (sensorPrev-sensorValue)/elapsedTime < thresh2){
+  if(sensorValue< threshold && slope < thresh2 && (sensorValue-sensorPrev)>60){
+//  if(slope< thresh2 && (sensorValue-sensorPrev)> 100){
     digitalWrite(ledPin, HIGH);
+    hits++;
     Serial.println("Hit detected at sensor 1");
     Serial.println(sensorValue);
-    Serial.println(millis());
+//    Serial.println(millis());
+    Serial.print("Slope: ");
+    Serial.println(slope);
+    Serial.print("hits: ");
+    Serial.println(hits);
+    Serial.print("Diff: ");
+    Serial.println(sensorValue-sensorPrev);
     Serial.println("----");
+    delay(15);
 
   }
   
-  else if(sensorValue2 < threshold && abs(sensorPrev2-sensorValue2) > thresh2){
-    digitalWrite(ledPin, HIGH);
-    Serial.println("Hit detected at sensor 2");
-    Serial.println(sensorValue2);
-    Serial.println(millis());
-    Serial.println("----");
-  }
+//  else if(sensorValue2 < threshold && abs(sensorPrev2-sensorValue2) > thresh2){
+//    digitalWrite(ledPin, HIGH);
+//    Serial.println("Hit detected at sensor 2");
+//    Serial.println(sensorValue2);
+//    Serial.println(millis());
+//    Serial.println("----");
+//  }
   sensorPrev = sensorValue;
   sensorPrev2 = sensorValue2;
+  currentTime = millis();
 }
