@@ -2,6 +2,7 @@
     Hilary Mogul - hilary.mogul@gmail.com
 '''
 import numpy as np
+import os
 
 # if in recording mode
 recording = False
@@ -12,14 +13,16 @@ userHits = np.empty((4,0))
 #user heights- has time and height for each stick - do left, right
 userHeights = np.empty((3,0))
 
-
 userAngles = np.empty((2,0))
+
 #ground truth of what the user should be getting
 groundTruth = np.empty((4,0))
 # ground truth heights and angles
 gtHeights = np.empty((3,0))
 
 gtAngles = np.empty((2,0))
+
+
 
 '''color settings (HSV)'''
 # lower and upper bounds for tip of Right stick
@@ -38,6 +41,28 @@ tipL_upper = np.array([15,255,255])
 #lower and upper bounds for band of Left stick
 stickL_lower = np.array([0,0,0])
 stickL_upper = np.array([0,0,0])
+
+''' paths to folders for each '''
+userPath = '~/Desktop/UserInfo'
+if not os.path.exists(userPath):
+    os.mkdir(userPath)
+userFolder = '/'
+
+gtPath = '~/Desktop/TeacherInfo'
+gtFolder = '/'
+if not os.path.exists(gtPath):
+    os.mkdir(gtPath)
+
+
+def setUserFolder(name):
+    userFolder = name
+    if not os.path.exists(os.path.join(userPath, userFolder)):
+        os.mkdir(os.path.join(userPath, userFolder))
+
+def setGTFolder(name):
+    gtFolder = name
+    if not os.path.exists(os.path.join(gtPath, gtFolder)):
+        os.mkdir(os.path.join(gtPath, gtFolder))
 
 
 
