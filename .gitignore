@@ -1,0 +1,4 @@
+# things to ignore
+*.pyc
+*.o
+*.exe
