@@ -7,6 +7,11 @@ import os
 # if in recording mode
 recording = False
 
+''' session settings '''
+duration = 0 # in seconds
+tempo = 0 # in bpm
+repeating = False # repeating per measure
+
 # meant to be the users hits
 userHits = np.empty((4,0))
 
@@ -53,6 +58,10 @@ gtFolder = '/'
 if not os.path.exists(gtPath):
     os.mkdir(gtPath)
 
+def setUserPath(name):
+    userPath = name
+    if not os.path.exists(userPath):
+        os.mkdir(userPath)
 
 def setUserFolder(name):
     userFolder = name
