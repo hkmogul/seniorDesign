@@ -1,60 +1,79 @@
-''' Main program to run for senior design project '''
+''' GUI Controller and Wrapper for Drum Trainer
+    Hilary Mogul - hilary.mogul@gmail.com
+'''
 
-import Tkinter
 import numpy as np
-import cv2
-import scipy.io
-import matplotlib.pyplot as plt
 import os
 import sys
+import cv2
+import Tkinter
+import matplotlib.pyplot as plt
+#import tkFont
+import tkMessageBox
 
 sys.path.append("libraries")
-# user defined libraries
-import imageFunctions as img
-import config as cfg
-import performance_analysis as perf
+# self made libraries
 import readHits
+import imageFunctions as img
+import performance_analysis as perf
+import config as cfg
 
-root = Tkinter.Tk()
-f1 = True
-def frame2():
-	nextFrame = Tkinter.Frame(root)
-	nextFrame.pack()
-	Button2 = Tkinter.Button(nextFrame, text = "Press me to go to frame1", command = switchBack)
-	Button2.pack(side = Tkinter.RIGHT)
+# helv16 = tkFont.Font(family = "Helvetica",size =  16)
+root= Tkinter.Tk()
+# initial opening window
+def quit():
+	root.quit()
 
-def switchBack():
-	global f1
-	clearOut(root)
-	if f1:
-		f1 = False
-		frame2()
-	else:
-		f1 = True
-		frame1()
+def credits():
+	tkMessageBox.showinfo("Credits", "Team ColDRUMbia 5ever")
+
+def viewInit():
+	frameI = Tkinter.Frame(root)
+	frameI.pack()
+	label = Tkinter.Label(frameI, text = "DRUM TRAINER PROGRAM", relief = Tkinter.RAISED)
+	label.grid(row = 0, column = 1)
+#	global helv16
+	button0 = Tkinter.Button(frameI, text = "Record new Example", command = option0)
+	button0.grid(row = 1, column = 1)
+
+	button1 = Tkinter.Button(frameI, text = "Review Existing Attempt", command = option1)
+	button1.grid(row = 3, column=1)
+
+	button2 = Tkinter.Button(frameI, text = "Record new Attempt", command = option2)
+	button2.grid(row = 5, column = 1)
+
+	button3 = Tkinter.Button(frameI, text = "FUN MODE", command = FUN)
+	button3.grid(row = 7, column = 1)
+
+	quitButton = Tkinter.Button(frameI, text = "QUIT", command = quit)
+	quitButton.grid(row = 9, column =2)
+	
+	creditB = Tkinter.Button(frameI, text = "CREDITS", command = credits)
+	creditB.grid(row = 9, column = 0)
+
+def option0():
+	pass
+def option1():
+	pass
+def option2():
+	pass
+def option3():
+	pass
+def FUN():
+	print "AWWW YEEAAAHHHH"
+	pass
+
+
+
+
+
+
+
 
 def clearOut(parent):
 	for widget in parent.winfo_children():
 		widget.destroy()
 
-def frame1():
-	frame = Tkinter.Frame(root)
-	frame.pack()
-	Button1 = Tkinter.Button(frame, text = "Press me to go to frame2", command = switchBack)
-	Button1.pack(side = Tkinter.LEFT)
-
-
-frame1()
-root.mainloop()
-
-
-
-
-
-
-
-
-
-
+viewInit()
 
 root.mainloop()
