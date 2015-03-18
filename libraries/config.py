@@ -49,14 +49,14 @@ stickL_upper = np.array([0,0,0])
 
 ''' paths to folders for each '''
 userPath = '~/Desktop/UserInfo'
-if not os.path.exists(userPath):
-    os.mkdir(userPath)
+#if not os.path.exists(userPath):
+ #   os.mkdir(userPath)
 userFolder = '/'
 
 gtPath = '~/Desktop/TeacherInfo'
 gtFolder = '/'
-if not os.path.exists(gtPath):
-    os.mkdir(gtPath)
+#if not os.path.exists(gtPath):
+ #   os.mkdir(gtPath)
 
 def setUserPath(name):
     userPath = name

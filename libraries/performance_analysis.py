@@ -34,7 +34,7 @@ def pad_lesser(gt, data):
     if gt.shape[1] > data.shape[1]:
         pad = np.zeros((3, gt.shape[1]-data.shape[1]))
         data = np.hstack((data, pad))
-    else if data.shape[1] > gt.shape[1]:
+    elif data.shape[1] > gt.shape[1]:
         pad = np.zeros((3, data.shape[1]-gt.shape[1]))
         gt = np.hstack((gt, pad))
     return gt, data

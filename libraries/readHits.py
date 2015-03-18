@@ -15,7 +15,7 @@ import config
     Example expected string to parse would be: '01-1056'= northwest velocity = 56
     timeStart should be an int in ms declared
 '''
-def parseInput(input = None, timeStart):
+def parseInput(timeStart, input = None):
     if input is None:
         return None
     # get time first to mitigate delays- convert to millis to prevent overflow
@@ -40,7 +40,7 @@ def openComm(address = None, baud = None, notStore= True):
         while config.recording:
             info = serial.readline()
             if info is not None:
-                    time, x, y, vel = parseInput(info, timeStart)
+                    time, x, y, vel = parseInput(timeStart, info)
                     print "-----"
                     print "Time: {0} \nPosition: {1},{2}\n Velocity: {3}".format(time, x, y, vel)
                     print "-----"
@@ -48,8 +48,8 @@ def openComm(address = None, baud = None, notStore= True):
         while config.recording:
             info = serial.readline()
             if info is not None:
-                time, x, y, vel = parseInput(info, timeStart)
-                config.userHits = np.hstack((config.userHits, np.array([time;vel;x;y])))
+                time, x, y, vel = parseInput(timeStart, info)
+                config.userHits = np.hstack((config.userHits, np.array([time,vel,x,y])))
     # when done, close out connection
     ser.close()
 
