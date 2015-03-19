@@ -29,12 +29,9 @@ def parseInput(timeStart, input = None):
 ''' Open a serial connection with arduino, then read until some global variable hits
     Expected to be called upon in a thread, then started/killed when necessary
 '''
-def openComm(address = None, baud = None, notStore= True):
+def openComm(notStore= True):
     timeStart = time.time()
-    if address is None:
-        ser = serial('/dev/tty.usbmodem1411', 9600, timeout = 0)
-    else:
-        ser = serial(address, baud,timeout = 0)
+    ser = serial(config.megaPath, config.megaBaud,timeout = 0)
     if notStore:
         # code for print and parse goes here
         while config.recording:
@@ -52,5 +49,6 @@ def openComm(address = None, baud = None, notStore= True):
                 config.userHits = np.hstack((config.userHits, np.array([time,vel,x,y])))
     # when done, close out connection
     ser.close()
+    return 
 
         # hopefully vstacking this will work
