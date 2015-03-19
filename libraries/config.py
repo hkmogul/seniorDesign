@@ -47,6 +47,7 @@ tipL_upper = np.array([15,255,255])
 stickL_lower = np.array([0,0,0])
 stickL_upper = np.array([0,0,0])
 
+ptsThresh = 250
 ''' paths to folders for each '''
 userPath = '~/Desktop/UserInfo'
 #if not os.path.exists(userPath):
@@ -122,7 +123,7 @@ def resetAll():
     #lower and upper bounds for band of Left stick
     stickL_lower = np.array([0,0,0])
     stickL_upper = np.array([0,0,0])
-
+    ptsThresh = 250
     ''' paths to folders for each '''
     userPath = '~/Desktop/UserInfo'
     #if not os.path.exists(userPath):
