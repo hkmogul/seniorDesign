@@ -49,13 +49,13 @@ stickL_upper = np.array([0,0,0])
 
 ptsThresh = 250
 ''' paths to folders for each '''
-userPath = '~/Desktop/UserInfo'
+userPath = ''
 #if not os.path.exists(userPath):
  #   os.mkdir(userPath)
-userFolder = '/'
+userFolder = ''
 
-gtPath = '~/Desktop/TeacherInfo'
-gtFolder = '/'
+gtPath = ''
+gtFolder = ''
 #if not os.path.exists(gtPath):
  #   os.mkdir(gtPath)
 
@@ -78,8 +78,9 @@ def setGTFolder(name):
     gtFolder = name
     if not os.path.exists(os.path.join(gtPath, gtFolder)):
         os.mkdir(os.path.join(gtPath, gtFolder))
-
-
+''' Check if a folder path already exists '''
+def checkFolderExists(name):
+    pass
 
 def resetUser():
     userHits = np.empty((4,0))

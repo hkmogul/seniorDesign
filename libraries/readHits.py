@@ -6,7 +6,7 @@ import numpy as np
 import time
 import datetime
 import serial
-
+import threading
 
 import config
 
@@ -49,6 +49,31 @@ def openComm(notStore= True):
                 config.userHits = np.hstack((config.userHits, np.array([time,vel,x,y])))
     # when done, close out connection
     ser.close()
-    return 
+    return
 
-        # hopefully vstacking this will work
+
+class megaComm(threading.Thread):
+    def __init__(self, threadID, name, notStore = True, spoof = False):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.notStore = notStore
+        self.spoof = spoof
+    def run(self):
+        if not spoof:
+            openComm(notStore = notStore)
+class unoComm(threading.Thread):
+    def __init__(self, threadID, name, spoof = False):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        config.recording = True
+    def run(self):
+        if not spoof:
+            comm = serial(config.unoPath, config.unoBaud, timeout = 0)
+        # TODO: send message that will start video
+        time.sleep(config.duration)
+        config.recording = False
+        # TODO: send message that will end video
+        if not spoof:
+            comm.close()

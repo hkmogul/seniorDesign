@@ -22,10 +22,14 @@ import config as cfg
 
 root= Tkinter.Tk()
 root.title("Drum Trainer")
-path = Tkinter.StringVar()
+userpath = Tkinter.StringVar()
+gtpath = Tkinter.StringVar()
 tempo = Tkinter.IntVar()
 duration = Tkinter.IntVar()
-root.configure(background = 'black')
+nameFolder = Tkinter.StringVar()
+ohVid = Tkinter.StringVar()
+sideVid = Tkinter.StringVar()
+frontVid = Tkinter.StringVar()
 def quit():
 	root.quit()
 def reset():
@@ -67,15 +71,15 @@ def option0():
 	nameLabel = Tkinter.Label(frame0, text = "Name of Example/Folder")
 	nameLabel.grid(row = 0,column = 0)
 
-	nameEntry = Tkinter.Entry(frame0, text = "Example")
+	nameEntry = Tkinter.Entry(frame0, textvariable = nameFolder)
 	nameEntry.grid(row = 1,column = 0)
 
 
-	global path
+	global userpath
 	pathLabel = Tkinter.Label(frame0, text = "Path for Example to be saved")
 	pathLabel.grid(row = 2, column = 0)
-	path.set(cfg.userPath)
-	pathShow = Tkinter.Label(frame0, textvariable = path, relief = Tkinter.SUNKEN)
+	userpath.set(cfg.userPath)
+	pathShow = Tkinter.Label(frame0, textvariable = userpath, relief = Tkinter.SUNKEN)
 	pathShow.grid(row = 3, column = 0)
 
 	pathButton = Tkinter.Button(frame0, text = "...", command = pathOpen)
@@ -83,10 +87,10 @@ def option0():
 
 	tempoLabel = Tkinter.Label(frame0, text = "TEMPO (bpm)").grid(row = 4, column = 0)
 	#TODO: validation function for numbers only
-	tempoEntry = Tkinter.Entry(frame0, text = 'cfg.tempo').grid(row = 5, column = 0)
+	tempoEntry = Tkinter.Spinbox(frame0, from_ = 40, to = 240, textvariable = tempo, command  = setTempDur).grid(row = 5, column = 0)
 	
 	durationLabel = Tkinter.Label(frame0, text = "Duration (seconds)").grid(row = 6, column = 0)
-	durationEntry = Tkinter.Entry(frame0).grid(row = 7, column = 0)
+	durationEntry = Tkinter.Spinbox(frame0, from_ = 1, to = 300, textvariable = duration, command = setTempDur).grid(row = 7, column = 0)
 
 	homeButton = Tkinter.Button(frame0, text = "Back", command = viewInit).grid(row = 0, column = 5)
 	# TODO: reset fields function outside of this loop?
@@ -97,14 +101,58 @@ def option0():
 	return
 def option0_start():
 	#TODO: function to pick up/set all appropriate values
+	# check if os join of path and name folder exists, and if it does, return a message box
+	if os.path.isdir(os.path.join(cfg.userPath, userFolder.get())):
+		tkMessageBox.showinfo("ERROR", "Folder already exists! Pick another")
+		return
+	cfg.userFolder = userFolder.get()
+	os.mkdir(os.path.join(cfg.userpath, cfg.userFolder))
 	clearOut(root)
 	frame0A = Tkinter.Frame(root).grid()
 	# maybe make a thing that flashes based on tempo in recording adjustment thread? if tempo is set, that is
-def cameraInstructions():
+	nowRecording = Tkinter.Label(root, text = "NOW RECORDING", bg = 'GREEN').grid()
+	mega = readHits.megaComm(1, "MegaComm", spoof = True)
+	uno = readHits.unoComm(2, "UnoComm", spoof = True)
+	uno.start()
+	time.sleep(.0001)
+	mega.start()
+	uno.join()
+	mega.join()
+	cameraInstructions0()
+	return
+
+def cameraInstructions0():
 	tkMessageBox.showinfo("Instructions for Camera Access", "Plug in camera USB hub and select Overhead, Side, and Front video files respectively")
-def pathOpen():
-	path.set(tkFileDialog.askdirectory(parent = root))
-	cfg.userPath = path.get()
+	clearOut(root)
+	camFrame = Tkinter.Frame(root).pack()
+
+
+''' Set path of user entry, bound to work bc of folder selection
+0 = path of user folder
+1 = path of GT folder
+'''
+def pathOpen(option = 0):
+	if option is 0:
+		userpath.set(tkFileDialog.askdirectory(parent = root))
+		cfg.userPath = userpath.get()
+	elif option is 1:
+		gtpath.set(tkFileDialog.askdirectory(parent = root))
+		cfg.gtPath = gtpath.get()
+
+''' set path of file entry, based on different options
+0 = path of overhead camera
+1 = path of side camera
+2 = path of front camera
+
+'''
+def fileChoose(option = 0):
+	if option is 0:
+		ohVid.set(tkFileDialog.askopenfilename(parent = root, defaultextension = '.avi'))
+	elif option is 1:
+		sideVid.set(tkFileDialog.askopenfilename(parent = root, defaultextension = '.avi'))
+	elif option is 2:
+		frontVid.set(tkFileDialog.askopenfilename(parent = root, defaultextension = '.avi'))
+
 def option1():
 
 	pass
@@ -115,8 +163,7 @@ def option3():
 def FUN():
 	print "AWWW YEEAAAHHHH"
 	pass
-
-
+''' Empties all widgets out of a parent '''
 def clearOut(parent):
 	for widget in parent.winfo_children():
 		widget.destroy()
@@ -125,7 +172,9 @@ def clearOut(parent):
 def padWidgets(parent):
 	for widget in parent.winfo_children():
 		widget.grid(padx = 5, pady = 2)
-
+def setTempDur():
+	cfg.tempo = tempo.get()
+	cfg.duration = duration.get()
 viewInit()
 
 root.mainloop()
