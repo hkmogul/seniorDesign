@@ -7,7 +7,7 @@ filepath = "/Users/hilarymogul/Downloads/Edwin_test_different_angle.AVI"
 print os.path.isfile(filepath)
 cap = cv2.VideoCapture(filepath)
 # cap.set(cv2.CV_CAP_PROP_FOURCC, cv2.CV_FOURCC('H','2','6','4'))
-print cv2.get(cv2.CV_CAP_PROP_FPS)
+# print cap.get(cv2.CV_CAP_PROP_FOURCC)
 print cap.isOpened()
 while(cap.isOpened()):
 	# retval= cap.grab()
@@ -22,5 +22,7 @@ while(cap.isOpened()):
 		cap.release()
 		break
 	cv2.imshow('drum', image)
-	cv2.waitkey(100)
+	k = cv2.waitKey(100) & 0xFF
+	if k ==27:
+		break
 cv2.destroyAllWindows()
