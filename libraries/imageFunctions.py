@@ -96,6 +96,24 @@ def sideProcess(vidPath, fs = 120):
         heights = np.hstack((heights, np.array([[timestep*fc],[hL],[hR]])))
         fc = fc+1
         cv2.waitKey(1)
+
     return heights
 
+''' return numpy arrays of stick angle and possibly finer positions for tips '''
+def ohProcess(vidPath, fs = 120, finePos = False):
+    cap = cv2.VideoCapture(vidPath)
+    angles = np.empty((2,0))
+    
+    fc = 0
+    timestep = (1/fs)*1000
+    while cap.isOpened():
+        ret, image = cap.read()
+        if ret is False:
+            cap.release()
+            break
+        ang= stickAngle(image)
+        angles= np.hstack((angles, np.array([[timestep*fc], [ang]])))
+        fc = fc+1
+        cv2.waitKey(1)
+    return angles
 
