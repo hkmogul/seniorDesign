@@ -60,20 +60,21 @@ class megaComm(threading.Thread):
         self.notStore = notStore
         self.spoof = spoof
     def run(self):
-        if not spoof:
+        if not self.spoof:
             openComm(notStore = notStore)
 class unoComm(threading.Thread):
     def __init__(self, threadID, name, spoof = False):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.name = name
+        self.spoof = spoof
         config.recording = True
     def run(self):
-        if not spoof:
+        if not self.spoof:
             comm = serial(config.unoPath, config.unoBaud, timeout = 0)
         # TODO: send message that will start video
         time.sleep(config.duration)
         config.recording = False
         # TODO: send message that will end video
-        if not spoof:
+        if not self.spoof:
             comm.close()
