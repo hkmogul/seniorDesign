@@ -27,9 +27,6 @@ gtpath = Tkinter.StringVar()
 tempo = Tkinter.IntVar()
 duration = Tkinter.IntVar()
 nameFolder = Tkinter.StringVar()
-ohVid = Tkinter.StringVar()
-sideVid = Tkinter.StringVar()
-frontVid = Tkinter.StringVar()
 def quit():
 	root.quit()
 def reset():
@@ -86,7 +83,7 @@ def option0():
 	pathButton.grid(row = 3, column = 1)
 
 	tempoLabel = Tkinter.Label(frame0, text = "TEMPO (bpm)").grid(row = 4, column = 0)
-	#TODO: validation function for numbers only
+	#TODO: validation function for numbers only- resolved by using spinbox instead
 	tempoEntry = Tkinter.Spinbox(frame0, from_ = 40, to = 240, textvariable = tempo, command  = setTempDur).grid(row = 5, column = 0)
 	
 	durationLabel = Tkinter.Label(frame0, text = "Duration (seconds)").grid(row = 6, column = 0)
@@ -102,31 +99,73 @@ def option0():
 def option0_start():
 	#TODO: function to pick up/set all appropriate values
 	# check if os join of path and name folder exists, and if it does, return a message box
-	if os.path.isdir(os.path.join(cfg.userPath, userFolder.get())):
+	if os.path.isdir(os.path.join(cfg.userPath, nameFolder.get())):
 		tkMessageBox.showinfo("ERROR", "Folder already exists! Pick another")
 		return
-	cfg.userFolder = userFolder.get()
-	os.mkdir(os.path.join(cfg.userpath, cfg.userFolder))
+	# check for empty strings
+	elif len(nameFolder.get()) ==0  or duration.get() is None or len(userpath.get()) == 0:
+		tkMessageBox.showinfo("ERROR", "Missing data, please fill in everything")
+		return
+	cfg.userFolder = nameFolder.get()
+	os.mkdir(os.path.join(cfg.userPath, cfg.userFolder))
 	clearOut(root)
 	frame0A = Tkinter.Frame(root).grid()
 	# maybe make a thing that flashes based on tempo in recording adjustment thread? if tempo is set, that is
-	nowRecording = Tkinter.Label(root, text = "NOW RECORDING", bg = 'GREEN').grid()
+	nowRecording = Tkinter.Label(frame0A, text = "NOW RECORDING", bg = 'GREEN').grid()
+
+	#time.sleep(0.1)
 	mega = readHits.megaComm(1, "MegaComm", spoof = True)
 	uno = readHits.unoComm(2, "UnoComm", spoof = True)
 	uno.start()
 	time.sleep(.0001)
 	mega.start()
+	# debug printing TODO: dummy out, and set spoof to False
+	print "RECORDING NOW AT"
+	print time.localtime()
 	uno.join()
 	mega.join()
-	cameraInstructions0()
+	print "FINISHING RECORDING"
+	print time.localtime()
+	cameraInstructions(0)
 	return
+'''File prompts for video files to be processed
+   0 = option 0- initial just copy and process to be used as ground truth/funsies
 
-def cameraInstructions0():
+'''
+def cameraInstructions(choice = 0):
+	ohPath = Tkinter.StringVar()
+	sidePath = Tkinter.StringVar()
+	frontPath = Tkinter.StringVar()
+	def setOH():
+		ohPath.set(tkFileDialog.askopenfilename(defaultextension = '.avi'))
+		return
+	def setSide():
+		sidePath.set(tkFileDialog.askopenfilename(defaultextension = '.avi'))
+		return
+	def setFront():
+		frontPath.set(tkFileDialog.askopenfilename(defaultextension = '.avi'))
+		return
 	tkMessageBox.showinfo("Instructions for Camera Access", "Plug in camera USB hub and select Overhead, Side, and Front video files respectively")
 	clearOut(root)
-	camFrame = Tkinter.Frame(root).pack()
+	camFrame = Tkinter.Frame(root).grid()
+	# list of labels and textentries with buttons next to them for files
+	ohLabel = Tkinter.Label(camFrame, text ="Overhead View File").grid(row = 1, column = 0)
+	ohEntry = Tkinter.Label(camFrame, textvariable = ohPath, relief = Tkinter.SUNKEN).grid(row =2, column = 0)
+	ohButton = Tkinter.Button(camFrame, text = "...", command = setOH).grid(row = 2, column = 1)	
+	
+	sideLabel = Tkinter.Label(camFrame, text ="Side View File").grid(row = 3, column = 0)
+	sideEntry = Tkinter.Label(camFrame, textvariable = sidePath, relief = Tkinter.SUNKEN).grid(row =4, column = 0)
+	sideButton = Tkinter.Button(camFrame, text = "...", command = setSide).grid(row = 4, column = 1)	
 
-
+	frontLabel = Tkinter.Label(camFrame, text ="Front View File").grid(row = 5, column = 0)
+	frontEntry = Tkinter.Label(camFrame, textvariable = frontPath, relief = Tkinter.SUNKEN).grid(row =6, column = 0)
+	frontButton = Tkinter.Button(camFrame, text = "...", command = setFront).grid(row = 6, column = 1)	
+	
+	def continueProcess():
+		# TODO: check option choice, and based on that decide to process alone or correlate with ground truth
+		pass
+	nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess).grid(row =3, column =5)
+	
 ''' Set path of user entry, bound to work bc of folder selection
 0 = path of user folder
 1 = path of GT folder
@@ -139,19 +178,6 @@ def pathOpen(option = 0):
 		gtpath.set(tkFileDialog.askdirectory(parent = root))
 		cfg.gtPath = gtpath.get()
 
-''' set path of file entry, based on different options
-0 = path of overhead camera
-1 = path of side camera
-2 = path of front camera
-
-'''
-def fileChoose(option = 0):
-	if option is 0:
-		ohVid.set(tkFileDialog.askopenfilename(parent = root, defaultextension = '.avi'))
-	elif option is 1:
-		sideVid.set(tkFileDialog.askopenfilename(parent = root, defaultextension = '.avi'))
-	elif option is 2:
-		frontVid.set(tkFileDialog.askopenfilename(parent = root, defaultextension = '.avi'))
 
 def option1():
 
