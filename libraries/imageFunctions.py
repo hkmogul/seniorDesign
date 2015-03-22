@@ -32,7 +32,7 @@ return None if the color in question can't be found
 def getHeightRaw(image, hsv, scale =1):
     x, y, pts = findCenter(image, hsv[0],hsv[1])
     if isNan(x) or pts < config.ptsThresh:
-        return None
+        return -1
     else:
         return (image.shape[0]-y)*scale
 
@@ -78,3 +78,24 @@ def mat2coord(shape, x, y):
     xp = x -int(shape[1]/2)
     yp = int(shape[0]/2) - y
     return xp, yp
+
+''' Return numpy arrays of height, and possibly left or right for each hit? '''
+def sideProcess(vidPath, fs = 120):
+    cap = cv2.VideoCapture(vidPath)
+    heights = np.empty((3,0))
+    fc = 0
+    timestep = (1/fs)*1000
+    while cap.isOpened():
+        ret, image = cap.read()
+        if ret is False:
+            cap.release()
+            break
+        hL= getHeightRaw(image, np.vstack((config.tipL_lower, config.tipL_upper)))
+        hR= getHeightRaw(image, np.vstack((config.tipR_lower, config.tipR_upper)))
+
+        heights = np.hstack((heights, np.array([[timestep*fc],[hL],[hR]])))
+        fc = fc+1
+        cv2.waitKey(1)
+    return heights
+
+
