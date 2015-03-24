@@ -12,6 +12,7 @@ import tkMessageBox
 import tkFileDialog
 import threading
 import time
+import shutil
 
 sys.path.append("libraries")
 # self made libraries
@@ -31,6 +32,11 @@ def quit():
 	root.quit()
 def reset():
 	cfg.resetAll()
+	userpath.set('')
+	gtpath.set('')
+	tempo.set(40)
+	duration.set(0)
+	nameFolder.set('')
 def credits():
 	tkMessageBox.showinfo("Credits", "Team ColDRUMbia 5ever")
 #initial window
@@ -83,11 +89,29 @@ def option0():
 	pathButton.grid(row = 3, column = 1)
 
 	tempoLabel = Tkinter.Label(frame0, text = "TEMPO (bpm)").grid(row = 4, column = 0)
-	#TODO: validation function for numbers only- resolved by using spinbox instead
 	tempoEntry = Tkinter.Spinbox(frame0, from_ = 40, to = 240, textvariable = tempo, command  = setTempDur).grid(row = 5, column = 0)
 	
 	durationLabel = Tkinter.Label(frame0, text = "Duration (seconds)").grid(row = 6, column = 0)
 	durationEntry = Tkinter.Spinbox(frame0, from_ = 1, to = 300, textvariable = duration, command = setTempDur).grid(row = 7, column = 0)
+
+	# arduino selection boxes
+	serialList = readHits.serial_ports()
+	unoLabel = Tkinter.Label(frame0, text = "Address of UNO (Camera Controller)").grid(row = 8, column = 0)
+	unoBox = Tkinter.Listbox(frame0, selectmode = Tkinter.SINGLE)
+	for address in serialList:
+		unoBox.insert(Tkinter.END, address)
+	megaLabel = Tkinter.Label(frame0, text = "Address of Mega (Sensor Reader)").grid(row = 9, column = 0)
+	megaBox = Tkinter.Listbox(frame0, selectmode = Tkinter.SINGLE)
+	for address in serialList:
+		megaBox.insert(Tkinter.END, address)
+	unoBox.grid(row = 8, column = 1)
+	megaBox.grid(row = 9, column = 1)
+	def unoSelect(evt):
+		cfg.unoPath = unoBox.get(unoBox.curselection())
+	def megaSelect(evt):
+		cfg.megaPath = megaBox.get(megaBox.curselection())
+	unoBox.bind('<<ListboxSelect>>', unoSelect)
+	megaBox.bind('<<ListboxSelect>>', megaSelect)
 
 	homeButton = Tkinter.Button(frame0, text = "Back", command = viewInit).grid(row = 0, column = 5)
 	# TODO: reset fields function outside of this loop?
@@ -103,7 +127,7 @@ def option0_start():
 		tkMessageBox.showinfo("ERROR", "Folder already exists! Pick another")
 		return
 	# check for empty strings
-	elif len(nameFolder.get()) ==0  or duration.get() is None or len(userpath.get()) == 0:
+	elif len(nameFolder.get()) ==0  or duration.get() is None or len(userpath.get()) == 0 or cfg.unoPath is '' or cfg.megaPath is '' or cfg.megaPath is cfg.unoPath:
 		tkMessageBox.showinfo("ERROR", "Missing data, please fill in everything")
 		return
 	cfg.userFolder = nameFolder.get()
@@ -130,7 +154,8 @@ def option0_start():
 	return
 '''File prompts for video files to be processed
    0 = option 0- initial just copy and process to be used as ground truth/funsies
-
+   1- option 1 - review existing attempt.  prob wont be used
+   2- option 2- record new attempt.  copy, process, compare as ground truth
 '''
 def cameraInstructions(choice = 0):
 	ohPath = Tkinter.StringVar()
@@ -161,10 +186,24 @@ def cameraInstructions(choice = 0):
 	frontEntry = Tkinter.Label(camFrame, textvariable = frontPath, relief = Tkinter.SUNKEN).grid(row =6, column = 0)
 	frontButton = Tkinter.Button(camFrame, text = "...", command = setFront).grid(row = 6, column = 1)	
 	
-	def continueProcess():
+	def continueProcess0():
 		# TODO: check option choice, and based on that decide to process alone or correlate with ground truth
+		if os.path.isfile(sidePath.get()) and os.path.isfile(ohpath.get()):
+			cfg.userHeights = img.sideProcess(sidePath.get())
+			cfg.userAngles = img.ohProcess(ohPath.get())
+			shutil.copy2(sidePath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'sideView.avi'))
+			shutil.copy2(ohPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'overheadView.avi'))
+			shutil.copy2(frontPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'frontView.avi'))
+			# TODO: run image processing
+		else:
+			tkMessageBox.showinfo("ERROR", "Invalid files, try again")
+
+
 		pass
-	nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess).grid(row =3, column =5)
+	if choice ==0:
+		nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess0).grid(row =3, column =5):
+	else:
+		print "NOT THERE YET"
 	
 ''' Set path of user entry, bound to work bc of folder selection
 0 = path of user folder
@@ -178,17 +217,21 @@ def pathOpen(option = 0):
 		gtpath.set(tkFileDialog.askdirectory(parent = root))
 		cfg.gtPath = gtpath.get()
 
-
+''' things for reviewing an existing attempt.  should be able to just loadmat this '''
 def option1():
 
 	pass
+
+''' recording a new attempt.  follows procession of first, with side note of selecting GT folder '''
 def option2():
 	pass
-def option3():
-	pass
+
+''' if i get fluid synth going, make an instrument version '''
 def FUN():
 	print "AWWW YEEAAAHHHH"
 	pass
+
+
 ''' Empties all widgets out of a parent '''
 def clearOut(parent):
 	for widget in parent.winfo_children():
@@ -201,6 +244,8 @@ def padWidgets(parent):
 def setTempDur():
 	cfg.tempo = tempo.get()
 	cfg.duration = duration.get()
-viewInit()
 
+
+
+viewInit()
 root.mainloop()
