@@ -23,7 +23,7 @@ def parseInput(timeStart, input = None):
     timeDiff = (timeStart - time.time()).microseconds/1000
     x = int(input[:2])
     y = int(input[2:4])
-    vel = int(input[-2:])
+    vel = int(input[-3:])
     return timeDiff, x, y, vel
 
 
