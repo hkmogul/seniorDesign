@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import config
+import matplotlib.figure as fig
 
 # analysis functions for analyzing the output of
 
@@ -107,17 +108,22 @@ def gradeRef(gt, userdata, error = 50):
 ''' make sheet music style printout 
     saves to either CWD (debug = True)
     or to user Path in config
-
+    sig = numerator of time signature (how many beats per measure)
 '''
-def pltGeneral(userdata, gt = None, debug = False):
+def pltGeneral(userdata, gt = None, debug = False, sig = 4):
+    plt.clf()
+    plt.figure(figsize=(24,6), dpi = 80)
     if debug:
         tempo = 120
     else:
         tempo = config.tempo
     interval =60000/tempo
-    user = plt.stem(userdata[0], userdata[1])
+    # user = plt.stem(userdata[0], userdata[1])
+    user = plt.plot(userdata[0], userdata[1], 'o')
+
     if gt is not None:
-        gt = plt.stem(gt[0], gt[1], linefmt = 'g',markerfmt = 'go')
+        # gt = plt.stem(gt[0], gt[1], linefmt = 'g',markerfmt = 'go')
+       gt = plt.plot(gt[0], gt[1], 'go')
 
     # start making vertical lines
     end = plt.axis()[1] +100
@@ -126,13 +132,67 @@ def pltGeneral(userdata, gt = None, debug = False):
     plt.xlabel("Time (ms)")
     plt.ylabel("Velocity (MIDI Style)")
     vRange = np.arange(0,end, interval)
-    plt.vlines(vRange, 0, 127)
+    mesRange = np.arange(0,end,interval*4)
+    plt.vlines(vRange, 0, 127, linestyles = 'dashed')
+    plt.vlines(mesRange, 0 ,127)
+
     if debug:
-        plt.savefig('hitSheet.png')
+        plt.savefig('hitSheet.gif')
     else:
-        plt.savefig(os.path.join(config.userpath, 'hitSheet.png'))
+        plt.savefig(os.path.join(config.userpath, 'hitSheet.gif'))
+    return
+''' scatterplot of positions
+TODO: maybe histogram instead? is there such a thing as a 2D histogram?
+ '''
+# def pltLocations(userdata, gt = None, debug = False):
+#     plt.clf()
+#     user = plt.scatter(userdata[2], userdata[3])
+#     if gt is not None:
+#         gt = plt.scatter(gt[2], gt[3], c = u'g')
+#     plt.axis([-2,2,-2,2])
+#     if debug:
+#         plt.savefig('locations.png')
+#     else:
+#         plt.savefig(os.path.join(config.userpath, 'locations.png'))
+#     return
+def pltLocations(userdata, gt = None, debug = False):
+    plt.clf()
+    plt.subplot(211)
+    userX = plt.hist(userdata[2], bins = 5)
+    if gt is not None:
+        gtX = plt.hist(gt[2], bins = 5)
+    plt.subplot(212)
+    userY = plt.hist(userdata[3], bins = 5)
+    if gt is not None:
+        gtY = plt.hist(gt[3], bins = 5)
+    if debug:
+        plt.savefig('locations.gif')
+    else:
+        plt.savefig(os.path.join(config.userpath, 'locations.gif'))
+    return
 
-
+''' heights vs time '''
+def pltHeights(userdata, gt = None, debug = False):
+    plt.clf()
+    user = plt.plot(userdata[0], userdata[1])
+    if gt is not None:
+        gtdata = plt.plot(gt[0],gt[1], 'g')
+    if debug:
+        plt.savefig('heights.gif')
+    else:
+        plt.savefig(os.path.join(config.userpath, 'heights.gif'))
+    return
+''' angles vs time '''
+def pltAngles(userdata, gt= None, debug = False):
+    plt.clf()
+    user = plt.plot(userdata[0], userdata[1])
+    if gt is not None:
+        gtdata = plt.plot(gt[0],gt[1], 'g')
+    if debug:
+        plt.savefig('angles.gif')
+    else:
+        plt.savefig(os.path.join(config.userpath, 'angles.gif'))
+    return
 
 
 

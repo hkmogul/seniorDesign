@@ -47,7 +47,7 @@ def openComm(notStore= True):
             info = serial.readline()
             if info is not None:
                 time, x, y, vel = parseInput(timeStart, info)
-                config.userHits = np.hstack((config.userHits, np.array([time,vel,x,y])))
+                config.userHits = np.hstack((config.userHits, np.array([[time],[vel],[x],[y])))
     # when done, close out connection
     ser.close()
     return
