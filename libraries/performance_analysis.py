@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+import os
 import config
 
 # analysis functions for analyzing the output of
@@ -80,17 +80,18 @@ def pad_lesser(gt, data):
     Error argument = window to allow checking for time things around an area
     (in milliseconds)
     gt = ground truth
-    data= user input
+    userdata= user input
 '''
-def gradeRef(gt, data, error = 50):
+def gradeRef(gt, userdata, error = 50):
     results = np.zeros(gt.shape)
+    data = np.copy(userdata)
     found = False
     for i in xrange(gt.shape[1]):
         found = False
         # check error window for a hit in that timeframe (by checking velocity)
         for j in xrange(data.shape[1]):
             if abs(data[0][j] - gt[0][i]) <= error:
-                # then its a hit!
+                # then its a hit! get errors of each 
                 results[0][i] = gt[0][i] - data[0][j]
                 results[1][i] = gt[1][i] - data[1][j]
                 results[2][i] = gt[2][i] - data[2][j]
@@ -103,3 +104,40 @@ def gradeRef(gt, data, error = 50):
             results[0][i] = -1000
     # return results and remaining data to denote extra hits
     return results, data
+''' make sheet music style printout 
+    saves to either CWD (debug = True)
+    or to user Path in config
+
+'''
+def pltGeneral(userdata, gt = None, debug = False):
+    if debug:
+        tempo = 120
+    else:
+        tempo = config.tempo
+    interval =60000/tempo
+    user = plt.stem(userdata[0], userdata[1])
+    if gt is not None:
+        gt = plt.stem(gt[0], gt[1], linefmt = 'g',markerfmt = 'go')
+
+    # start making vertical lines
+    end = plt.axis()[1] +100
+    plt.axis([0,end, 0,127])
+    ymax = plt.axis()[3]
+    plt.xlabel("Time (ms)")
+    plt.ylabel("Velocity (MIDI Style)")
+    vRange = np.arange(0,end, interval)
+    plt.vlines(vRange, 0, 127)
+    if debug:
+        plt.savefig('hitSheet.png')
+    else:
+        plt.savefig(os.path.join(config.userpath, 'hitSheet.png'))
+
+
+
+
+
+
+
+
+
+
