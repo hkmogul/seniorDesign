@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 import math
 import config
+import os
 
 ''' check if number is undefined '''
 def isNan(num):
@@ -103,7 +104,6 @@ def sideProcess(vidPath, fs = 120):
 def ohProcess(vidPath, fs = 120, finePos = False):
     cap = cv2.VideoCapture(vidPath)
     angles = np.empty((2,0))
-    
     fc = 0
     timestep = (1/fs)*1000
     while cap.isOpened():
