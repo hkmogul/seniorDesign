@@ -3,3 +3,6 @@
 *.o
 *.exe
 *.DS_Store
+*.png
+*.gif
+
