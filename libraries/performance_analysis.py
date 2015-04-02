@@ -120,6 +120,7 @@ def pltGeneral(userdata, gt = None, debug = False, sig = 4):
     interval =60000/tempo
     # user = plt.stem(userdata[0], userdata[1])
     user = plt.plot(userdata[0], userdata[1], 'o')
+    plt.legend()
 
     if gt is not None:
         # gt = plt.stem(gt[0], gt[1], linefmt = 'g',markerfmt = 'go')

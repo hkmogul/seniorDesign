@@ -23,6 +23,7 @@ import config as cfg
 
 root= Tkinter.Tk()
 root.title("Drum Trainer")
+root.columnconfigure(0, weight=1)
 userpath = Tkinter.StringVar()
 gtpath = Tkinter.StringVar()
 tempo = Tkinter.IntVar()
@@ -43,6 +44,7 @@ def credits():
 def viewInit():
 	clearOut(root)
 	cfg.resetAll()
+	reset()
 	frameI = Tkinter.Frame(root)
 	frameI.pack()
 	label = Tkinter.Label(frameI, text = "DRUM TRAINER PROGRAM", relief = Tkinter.RAISED)
@@ -201,13 +203,15 @@ def cameraInstructions(choice = 0):
 
 		pass
 	if choice ==0:
-		nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess0).grid(row =3, column =5):
+		nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess0).grid(row =3, column =5)
 	else:
 		print "NOT THERE YET"
 	
 ''' Set path of user entry, bound to work bc of folder selection
 0 = path of user folder
 1 = path of GT folder
+TODO: check in gt folder that there are correct files- and load the tempo
+and duration for each
 '''
 def pathOpen(option = 0):
 	if option is 0:
@@ -215,16 +219,84 @@ def pathOpen(option = 0):
 		cfg.userPath = userpath.get()
 	elif option is 1:
 		gtpath.set(tkFileDialog.askdirectory(parent = root))
-		cfg.gtPath = gtpath.get()
+		if os.path.isfile(os.path.join(gtpath.get(), 'data.mat')):
+			cfg.gtPath = gtpath.get()
+			cfg.loadGT()
+			tempo.set(cfg.tempo)
+			duration.set(cfg.duration)
+		else:
+			tkMessageBox.showinfo('ERROR', 'Missing data file.  Please choose a different folder.')
 
-''' things for reviewing an existing attempt.  should be able to just loadmat this '''
+''' things for reviewing an existing attempt.  should be able to just loadmat this
+	then process the output files
+ '''
 def option1():
-
+	#TODO: label/entry/button for path for gt and user paths
+	# then run same functions as option2 after recording?
 	pass
 
 ''' recording a new attempt.  follows procession of first, with side note of selecting GT folder '''
 def option2():
+	clearOut(root)
+	frame2 = Tkinter.Frame(root)
+	frame2.grid()
+
+
+	nameLabel = Tkinter.Label(frame2, text = "Name of Attempt")
+	nameLabel.grid(row = 0,column = 0)
+
+	nameEntry = Tkinter.Entry(frame2, textvariable = nameFolder)
+	nameEntry.grid(row = 1,column = 0)
+
+
+	pathLabel = Tkinter.Label(frame2, text = "Path for Attempt to be saved")
+	pathLabel.grid(row = 2, column = 0)
+	userpath.set(cfg.userPath)
+	pathShow = Tkinter.Label(frame2, textvariable = userpath, relief = Tkinter.SUNKEN)
+	pathShow.grid(row = 3, column = 0)
+
+	pathButton = Tkinter.Button(frame2, text = "...", command = lambda: pathOpen(option =0))
+	pathButton.grid(row = 3, column = 1)
+
+	gtLabel = Tkinter.Label(frame2, text ="Path of Example to Follow").grid(row=4, column = 0)
+	gtpathShow = Tkinter.Label(frame2, textvariable = gtpath, relief = Tkinter.SUNKEN).grid(row = 5, column = 0)
+	gtButton = Tkinter.Button(frame2, text = "...", command = lambda: pathOpen(option =1)).grid(row=5, column = 1)
+
+	
+	# arduino selection boxes
+	xScroll = Tkinter.Scrollbar(frame2, orient = Tkinter.HORIZONTAL).grid(row)
+
+	serialList = readHits.serial_ports()
+	unoLabel = Tkinter.Label(frame2, text = "Address of UNO (Camera Controller)").grid(row = 8, column = 0)
+	unoBox = Tkinter.Listbox(frame2, selectmode = Tkinter.SINGLE)
+	for address in serialList:
+		unoBox.insert(Tkinter.END, address)
+	megaLabel = Tkinter.Label(frame2, text = "Address of Mega (Sensor Reader)").grid(row = 9, column = 0)
+	megaBox = Tkinter.Listbox(frame2, selectmode = Tkinter.SINGLE)
+	for address in serialList:
+		megaBox.insert(Tkinter.END, address)
+	unoBox.grid(row = 8, column = 1)
+	megaBox.grid(row = 9, column = 1)
+	def unoSelect(evt):
+		cfg.unoPath = unoBox.get(unoBox.curselection())
+	def megaSelect(evt):
+		cfg.megaPath = megaBox.get(megaBox.curselection())
+	unoBox.bind('<<ListboxSelect>>', unoSelect)
+	megaBox.bind('<<ListboxSelect>>', megaSelect)
+
+	homeButton = Tkinter.Button(frame2, text = "Back", command = viewInit).grid(row = 0, column = 5)
+	# TODO: reset fields function outside of this loop?
+	resetButton = Tkinter.Button(frame2, text = "Reset", command = reset).grid(row = 1, column = 5)
+	
+	startButton = Tkinter.Button(frame2, text = "START", command = option2_start, bg = 'GREEN').grid(row = 2, column = 5)
+	
+
+
+	padWidgets(frame2)
+
+def option2_start():
 	pass
+
 
 ''' if i get fluid synth going, make an instrument version '''
 def FUN():
