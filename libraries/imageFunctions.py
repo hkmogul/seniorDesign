@@ -49,28 +49,47 @@ def getDistance(image, hsv1, hsv2, scale =1):
     else:
         return None
 ''' get angle of single stick.  hsv1 and hsv2 correlate to stick hsv thresholds'''
-def getAngle(image, hsv1, hsv2):
+def getAngle(image, hsv1, hsv2, right = False):
     x1, y1, pts1 = findCenter(image, hsv1[0], hsv1[1])
-    x1, y1 = mat2coord(image.shape, x1,y1)
+    y1 = image.shape[0]- y1
     x2, y2, pts2 = findCenter(image, hsv2[0], hsv2[1])
-    x2, y2 = mat2coord(image.shape, x1,y1)
+    # x2, y2 = mat2coord(image.shape, x1,y1)
+    y2 = image.shape[0]- y2
 
+    # print "{0}, {1}".format(x2, y2)
     if not isNan(x1) and not isNan(x2) and min(pts1, pts2)> config.ptsThresh:
 
         y1 = image.shape[0]-y1
         y2 = image.shape[0]-y2
-        slope = (y1-y2)/(x1,x2)
-        return math.degrees(math.atan(slope))
+
+        if right:
+            if x2 < x1:
+                return math.degrees(math.atan((x1-x2)/math.fabs(y2-y1)))
+            # stick not pointed towards center in this case
+            else:
+                return None
+        # for left stick
+        else:
+            if x2 > x1:
+                return math.degrees(math.atan((x2-x1)/math.fabs(y2-y1)))
+            else:
+                return None
+        # slope = (y1-y2)/(x1-x2)
+        # # print "DEBUG MODE SLOPE IS {}".format(slope)
+        # # print  math.degrees(math.atan(slope))
+        # return math.degrees(math.atan(slope))
     else:
         return None
 ''' uses config hsv bounds to find angle between 2 sticks '''
 def stickAngle(image):
-    angleR = getAngle(image, np.vstack((config.stickR_lower, config.stickR_upper)), np.vstack((config.tipR_lower, config.tipR_upper)))
+    angleR = getAngle(image, np.vstack((config.stickR_lower, config.stickR_upper)), np.vstack((config.tipR_lower, config.tipR_upper)), right = True)
     angleL = getAngle(image, np.vstack((config.stickL_lower, config.stickL_upper)), np.vstack((config.tipL_lower, config.tipL_upper)))
+    print angleR
+    print angleL
     if angleR is None or angleL is None:
         return None
     else:
-        return 180-angleR-angleL
+        return angleR+angleL
 
 def dist(x1,y1,x2,y2, scale = 1):
     return math.sqrt(math.pow(x1-x2,2) + math.pow(y1-y2,2))* scale

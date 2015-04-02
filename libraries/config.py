@@ -35,20 +35,20 @@ gtAngles = np.empty((2,0))
 # tipR_upper = np.array([179,255,255])
 # BRIGHT YELLOW GAFF
 # orig hsv 42, 192, 198
-tipR_lower = np.array([35,75,150])
+tipR_lower = np.array([30,75,150])
 tipR_upper = np.array([45,255,255])
 
 
 #lower and upper bounds for band of Right stick
 # GREEN GAFF- 69, 165, 191
-stickR_lower = np.array([65,100,150])
-stickR_upper = np.array([80,255,255])
+stickR_lower = np.array([60,70,150])
+stickR_upper = np.array([85,255,255])
 
 
 # lower and upper bounds for tip of Left stick
 # PINK- 161,164,255
-tipL_lower = np.array([155,60,90])
-tipL_upper = np.array([166,255,255])
+tipL_lower = np.array([150,60,200])
+tipL_upper = np.array([167,200,255])
 #lower and upper bounds for band of Left stick
 # ORANGE - 2, 184, 252
 stickL_lower = np.array([0,155,155])
