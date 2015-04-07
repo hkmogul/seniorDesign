@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import os
 import config
 import matplotlib.figure as fig
-
+import math
 # analysis functions for analyzing the output of
 
 ''' Utility for turning raw data into signal stream (default resolution = 1ms)
@@ -40,39 +40,7 @@ def pad_lesser(gt, data):
         gt = np.hstack((gt, pad))
     return gt, data
 
-#
-# ''' Compares ground truth and data signal, and returns 2 arrays
-#     One corresponds to errors in ground truths (data stream not signal)
-#     Other is extra hits
-#     error = window to check around (default = 10ms)
-# '''
-#
-# def grade_perf(gt, data, error =50):
-#     # DELETE DATA POINTS AS YOU GO
-#     data_temp = data
-#     results = np.zeros(gt.shape)
-#     for i in xrange(10,gt.shape[1]):
-#         # time = i in milliseconds
-#         found = False
-#         foundIn = 0
-#         # find if there is a signal in the data that is within the error window
-#         for j in xrange(-1*error, error+1):
-#             if data_temp[1][i+j] is not 0:
-#                 found = True
-#                 foundIn = i+j
-#                 break
-#         if found is True:
-#             timeError = i - foundIn
-#             velError = gt[1][i] - data_temp[1][foundIn]
-#             xError = gt[2][i] - data_temp[2][foundIn]
-#             # yError = gt[3][i] - data_temp[3][foundIn]
-#             # delete data point so it isnt double counted- set to 0 to not mess with timestamps
-#             data_temp[:][foundIn] = np.zeros()
-#         else:
-#             timeError = -15
-#
-#     results =
-#     return results
+
 
 
 ''' Returns error on each hit from ground truth in 4xN array of error of each
@@ -112,6 +80,7 @@ def gradeRef(gt, userdata, error = 50):
 '''
 def pltGeneral(userdata, gt = None, debug = False, sig = 4):
     plt.clf()
+    # length of figure based on # of hits?
     plt.figure(figsize=(24,6), dpi = 80)
     if debug:
         tempo = 120
@@ -133,7 +102,7 @@ def pltGeneral(userdata, gt = None, debug = False, sig = 4):
     plt.xlabel("Time (ms)")
     plt.ylabel("Velocity (MIDI Style)")
     vRange = np.arange(0,end, interval)
-    mesRange = np.arange(0,end,interval*4)
+    mesRange = np.arange(0,end,interval*sig)
     plt.vlines(vRange, 0, 127, linestyles = 'dashed')
     plt.vlines(mesRange, 0 ,127)
 
@@ -143,34 +112,45 @@ def pltGeneral(userdata, gt = None, debug = False, sig = 4):
         plt.savefig(os.path.join(config.userpath, 'hitSheet.gif'))
     return
 ''' scatterplot of positions
-TODO: maybe histogram instead? is there such a thing as a 2D histogram?
+TODO: size of points based on # of hits
  '''
-# def pltLocations(userdata, gt = None, debug = False):
-#     plt.clf()
-#     user = plt.scatter(userdata[2], userdata[3])
-#     if gt is not None:
-#         gt = plt.scatter(gt[2], gt[3], c = u'g')
-#     plt.axis([-2,2,-2,2])
-#     if debug:
-#         plt.savefig('locations.png')
-#     else:
-#         plt.savefig(os.path.join(config.userpath, 'locations.png'))
-#     return
 def pltLocations(userdata, gt = None, debug = False):
     plt.clf()
-    plt.subplot(211)
-    userX = plt.hist(userdata[2], bins = 5)
+    x = [-1,0,1,-1,0,1,-1,0,1]
+    y = [1,1,1,0,0,0,-1,-1,-1]
+    scale = math.fabs(-500*math.atan(userdata.shape[1]+3000)+600)
+    # user = plt.scatter(userdata[2], userdata[3])
+    userAmt = positionAmts(userdata)
+    userSize = userAmt*int(scale)
+    # userSize = np.power(userAmt,2) * int(-1*math.atan(userdata.shape[1]/3-100)+11.5)
+    print "Scale : {}".format(scale)
+    print "User size : {}".format(userSize)
+    # userSize = [20*2**n for n in range(len(userAmt))]
+    user = plt.scatter(x,y,s = userSize, color = '#ff6600',alpha=0.5)
     if gt is not None:
-        gtX = plt.hist(gt[2], bins = 5)
-    plt.subplot(212)
-    userY = plt.hist(userdata[3], bins = 5)
-    if gt is not None:
-        gtY = plt.hist(gt[3], bins = 5)
+        gtAmt = positionAmts(gt)
+        # gtSize = np.power(gtAmt, 3)/50 * int(-1*math.atan(userdata.shape[1]/3-100)+11.5)
+        gtSize = gtAmt*int(scale)
+        # gtSize = 
+        # gtSize = [20*2**n for n in range(len(gtAmt))]
+        print "gtSize: {}".format(gtSize)
+
+        gt = plt.scatter(x, y, s= gtSize, c = u'b', alpha = 0.5)
+    plt.axis([-2,2,-2,2])
     if debug:
         plt.savefig('locations.gif')
     else:
         plt.savefig(os.path.join(config.userpath, 'locations.gif'))
     return
+
+def sizePlot():
+    x = np.arange(-5000,5000)
+    # print x[4995:5005]
+    scale = -10*(np.arctan(x*.001))
+    print np.amax(scale)
+    print scale[4995:5005]
+    plt.plot(x,scale)
+    plt.savefig('scale.gif')
 
 ''' heights vs time '''
 def pltHeights(userdata, gt = None, debug = False):
@@ -196,9 +176,49 @@ def pltAngles(userdata, gt= None, debug = False):
     return
 
 
+''' Does all images using global files
+    alone = True if not compared to GT
+ '''
+def wholeShebang(alone):
+    if alone:
+        pltGeneral(config.userHits)
+        pltHeights(config.userHeights)
+        pltAngles(config.userAngles)
+        pltLocations(config.userHits)
+    else:
+        config.error, config.extra = perf.gradeRef(config.groundTruth, config.userHits)
+        pltGeneral(config.userHits, config.groundTruth)
+        pltHeights(config.userHeights, config.gtHeights)
+        pltAngles(config.userAngles, config.gtAngles)
+        pltLocations(config.userHits, config.groundTruth)       
+
+''' Loads .mat files and respective arrays and values - return True if successful '''
+def loadPrev():
+    pass
+''' better "where" function for finding actual locations
+    returns amount of hits of a position given
+ '''
+def dblWhere(data, x,y):
+    m = data[2:5] == np.array([[x],[y]])
+    # print "m is {}".format(m)
+    n = np.logical_and(m[0], m[1])
+    # print "n is {}".format(n)
+    return np.sum(n)
+''' returns length 9 vector 
 
 
 
-
-
-
+'''
+def positionAmts(data):
+    amt = np.zeros((9,))
+    # print dblWhere(data, -1,1)
+    amt[0] = dblWhere(data,-1,1)
+    amt[1] = dblWhere(data,0,1)
+    amt[2] = dblWhere(data,1,1)
+    amt[3] = dblWhere(data,-1,0)
+    amt[4] = dblWhere(data,0,0)
+    amt[5] = dblWhere(data,1,0)
+    amt[6] = dblWhere(data,-1,-1)
+    amt[7] = dblWhere(data,0,-1)
+    amt[8] = dblWhere(data,1,-1)
+    return amt
