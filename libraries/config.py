@@ -6,10 +6,11 @@ import os
 import scipy.io
 # if in recording mode
 recording = False
-
+playing = False
 ''' session settings '''
 duration = 0 # in seconds
 tempo = 120 # in bpm
+sig = 4 # numerator of time signature
 repeating = False # repeating per measure
 
 # meant to be the users hits
@@ -27,7 +28,8 @@ gtHeights = np.empty((3,0))
 
 gtAngles = np.empty((2,0))
 
-
+error = np.empty((4,0)) #errors in hits
+extra = np.empty((4,0)) # extra hits
 
 '''color settings (HSV)'''
 # lower and upper bounds for tip of Right stick
@@ -41,8 +43,8 @@ tipR_upper = np.array([45,255,255])
 
 #lower and upper bounds for band of Right stick
 # GREEN GAFF- 69, 165, 191
-stickR_lower = np.array([60,70,150])
-stickR_upper = np.array([85,255,255])
+stickR_lower = np.array([60,75,150])
+stickR_upper = np.array([85,255,220])
 
 
 # lower and upper bounds for tip of Left stick
@@ -51,7 +53,7 @@ tipL_lower = np.array([150,60,200])
 tipL_upper = np.array([167,200,255])
 #lower and upper bounds for band of Left stick
 # ORANGE - 2, 184, 252
-stickL_lower = np.array([0,155,155])
+stickL_lower = np.array([1,155,155])
 stickL_upper = np.array([8,255,255])
 
 ptsThresh = 250
@@ -70,6 +72,10 @@ unoPath = ''
 megaPath = ''
 unoBaud = 9600
 megaBaud = 9600
+
+''' path of sf2 file for synthesizing '''
+sf2Path = ''
+octave = 1
 ''' loadmat of values from gt.  returns true if successful '''
 def loadGT():
     if os.path.isfile(os.path.join(gtPath, 'data.mat')):
