@@ -80,7 +80,7 @@ def option0():
 	nameEntry.grid(row = 1,column = 0)
 
 
-	global userpath
+	# global userpath
 	pathLabel = Tkinter.Label(frame0, text = "Path for Example to be saved")
 	pathLabel.grid(row = 2, column = 0)
 	userpath.set(cfg.userPath)
@@ -95,8 +95,14 @@ def option0():
 	
 	durationLabel = Tkinter.Label(frame0, text = "Duration (seconds)").grid(row = 6, column = 0)
 	durationEntry = Tkinter.Spinbox(frame0, from_ = 1, to = 300, textvariable = duration, command = setTempDur).grid(row = 7, column = 0)
+	
 
+	megaScroll = Tkinter.Scrollbar(frame0, orient = Tkinter.HORIZONTAL)
+	megaScroll.grid(row = 10, column =0, sticky = Tkinter.E+ Tkinter.W)
+	unoScroll = Tkinter.Scrollbar(frame0, orient = Tkinter.HORIZONTAL)
+	unoScroll.grid(row = 10, column = 1, sticky = Tkinter.E+ Tkinter.W)
 	# arduino selection boxes
+	# print type(megaScroll)
 	serialList = readHits.serial_ports()
 	unoLabel = Tkinter.Label(frame0, text = "Address of UNO (Camera Controller)").grid(row = 8, column = 0)
 	unoBox = Tkinter.Listbox(frame0, selectmode = Tkinter.SINGLE)
@@ -108,6 +114,10 @@ def option0():
 		megaBox.insert(Tkinter.END, address)
 	unoBox.grid(row = 8, column = 1)
 	megaBox.grid(row = 9, column = 1)
+	megaBox.config(xscrollcommand = megaScroll.set)
+	megaScroll.config(command = megaBox.xview)
+	unoBox.config(xscrollcommand = unoScroll.set)
+	unoScroll.config(command = unoBox.xview)
 	def unoSelect(evt):
 		cfg.unoPath = unoBox.get(unoBox.curselection())
 	def megaSelect(evt):
@@ -152,7 +162,7 @@ def option0_start():
 	mega.join()
 	print "FINISHING RECORDING"
 	print time.localtime()
-	cameraInstructions(0)
+	cameraInstructions(choice = 0)
 	return
 '''File prompts for video files to be processed
    0 = option 0- initial just copy and process to be used as ground truth/funsies
@@ -196,14 +206,32 @@ def cameraInstructions(choice = 0):
 			shutil.copy2(sidePath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'sideView.avi'))
 			shutil.copy2(ohPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'overheadView.avi'))
 			shutil.copy2(frontPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'frontView.avi'))
-			# TODO: run image processing
+			# create analysis images, and go to screen to present them- maybe have message box saying where everything is saved
+			perf.wholeShebang(alone = True)
+			# move onto window that nicely shows images
 		else:
 			tkMessageBox.showinfo("ERROR", "Invalid files, try again")
+			return;
 
-
-		pass
+	def continueProcess2():
+		# TODO: check option choice, and based on that decide to process alone or correlate with ground truth
+		if os.path.isfile(sidePath.get()) and os.path.isfile(ohpath.get()):
+			cfg.userHeights = img.sideProcess(sidePath.get())
+			cfg.userAngles = img.ohProcess(ohPath.get())
+			shutil.copy2(sidePath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'sideView.avi'))
+			shutil.copy2(ohPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'overheadView.avi'))
+			shutil.copy2(frontPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'frontView.avi'))
+			# create analysis images, and go to screen to present them- maybe have message box saying where everything is saved
+			perf.wholeShebang(alone = False)
+			# move onto window that nicely shows images
+		else:
+			tkMessageBox.showinfo("ERROR", "Invalid files, try again")
+			return;
+		
 	if choice ==0:
 		nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess0).grid(row =3, column =5)
+	elif choice == 2:
+		nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess2).grid(row =3, column =5)		
 	else:
 		print "NOT THERE YET"
 	
@@ -264,7 +292,7 @@ def option2():
 
 	
 	# arduino selection boxes
-	xScroll = Tkinter.Scrollbar(frame2, orient = Tkinter.HORIZONTAL).grid(row)
+	xScroll = Tkinter.Scrollbar(frame2, orient = Tkinter.HORIZONTAL).grid(row = 11)
 
 	serialList = readHits.serial_ports()
 	unoLabel = Tkinter.Label(frame2, text = "Address of UNO (Camera Controller)").grid(row = 8, column = 0)
@@ -293,16 +321,94 @@ def option2():
 
 
 	padWidgets(frame2)
-
+# open connections with arduino, then move on to find video files
 def option2_start():
+	#TODO: function to pick up/set all appropriate values
+	# check if os join of path and name folder exists, and if it does, return a message box
+	if os.path.isdir(os.path.join(cfg.userPath, nameFolder.get())):
+		tkMessageBox.showinfo("ERROR", "Folder already exists! Pick another")
+		return
+	# check for empty strings
+	elif len(nameFolder.get()) ==0  or duration.get() is None or len(userpath.get()) == 0 or cfg.unoPath is '' or cfg.megaPath is '' or cfg.megaPath is cfg.unoPath:
+		tkMessageBox.showinfo("ERROR", "Missing data, please fill in everything")
+		return
+	cfg.userFolder = nameFolder.get()
+	os.mkdir(os.path.join(cfg.userPath, cfg.userFolder))
+	clearOut(root)
+	frame0A = Tkinter.Frame(root).grid()
+	# maybe make a thing that flashes based on tempo in recording adjustment thread? if tempo is set, that is
+	nowRecording = Tkinter.Label(frame0A, text = "NOW RECORDING", bg = 'GREEN').grid()
+
+	#time.sleep(0.1)
+	mega = readHits.megaComm(1, "MegaComm", spoof = True)
+	uno = readHits.unoComm(2, "UnoComm", spoof = True)
+	uno.start()
+	time.sleep(.0001)
+	mega.start()
+	# debug printing TODO: dummy out, and set spoof to False
+	print "RECORDING NOW AT"
+	print time.localtime()
+	uno.join()
+	mega.join()
+	print "FINISHING RECORDING"
+	print time.localtime()
+	cameraInstructions(choice = 2)
 	pass
 
 
-''' if i get fluid synth going, make an instrument version '''
+''' if i get fluid synth going, make an instrument version
+	base window: set mega path and sf2 path
+'''
 def FUN():
-	print "AWWW YEEAAAHHHH"
-	pass
+	sf2 = Tkinter.StringVar()
+	def pickSF2():
+		sf2.set(tkFileDialog.askopenfilename(defaultextension = '.sf2'))
+		return
+	def startFun():
+		# check that 
+		if sf2.get() is None:
+			tkMessageBox.showinfo('ERROR', 'Please select a SoundFont file')
+		pass
+	clearOut(root)
+	funFrame = Tkinter.Frame(root).pack()
+	serialList = readHits.serial_ports()
+	megaScroll = Tkinter.Scrollbar(funFrame, orient = Tkinter.HORIZONTAL)
+	megaScroll.grid(row = 2, column =0, sticky = Tkinter.E+ Tkinter.W)
+	megaLabel = Tkinter.Label(funFrame, text = "Address of Mega (Sensor Reader)").grid(row = 1, column = 0)
+	megaBox = Tkinter.Listbox(funFrame, selectmode = Tkinter.SINGLE)
+	for address in serialList:
+		megaBox.insert(Tkinter.END, address)
+	megaBox.grid(row = 1, column = 1)	
+	megaBox.config(xscrollcommand = megaScroll.set)
+	megaScroll.config(command = megaBox.xview)
+	def megaSelect(evt):
+		cfg.megaPath = megaBox.get(megaBox.curselection())
+	megaBox.bind('<<ListboxSelect>>', megaSelect)
 
+	sf2Label = Tkinter.Label(funFrame, textvariable = sf2).grid(row = 3, column = 0)
+	sf2Button = Tkinter.Button(funFrame, text = "...", command = pickSF2).grid(row = 3, column = 1)
+	startButton = Tkinter.Button(funFrame, text = "START", command = startFun).grid(row = 0, column = 3)
+	backButton = Tkinter.Button(funFrame, text = "BACK", command = viewInit).grid(row = 1, column = 3)
+	# print "AWWW YEEAAAHHHH"
+
+
+def synthMode():
+	clearOut(root)
+	synthFrame = Tkinter.Frame(root)
+	synthFrame.grid()
+	# cfg.playing = True
+	synth = readHits.synthComm(1, "SynthComm", spoof = False)
+	def setThread():
+		cfg.playing = True
+		synth.start()
+	def stopThread():
+		cfg.playing = False
+		synth.join()
+		FUN()
+	startButt = Tkinter.Button(synthFrame, text = 'START', command = setThread)
+	backButt = Tkinter.Button(synthFrame, text = 'BACK', command = stopThread)
+	backButt.grid(row = 0, column = 0)
+	
 
 ''' Empties all widgets out of a parent '''
 def clearOut(parent):

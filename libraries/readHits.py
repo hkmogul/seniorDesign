@@ -9,8 +9,11 @@ import serial
 import threading
 import glob
 import sys
+from mingus.midi import fluidsynth
 import config
+from mingus.containers import Note
 
+names = ['C','D','E','F','G','A','B']
 ''' Parse string from arduino serial monitor to return location, velocity,
     time, etc
     Example expected string to parse would be: '01-1056'= northwest velocity = 56
@@ -47,12 +50,53 @@ def openComm(notStore= True):
             info = serial.readline()
             if info is not None:
                 time, x, y, vel = parseInput(timeStart, info)
-                config.userHits = np.hstack((config.userHits, np.array([[time],[vel],[x],[y])))
+                newHit = np.array([[time], [vel], [x], [y]])
+                config.userHits = np.hstack((config.userHits, newHit))
+    # when done, close out connection
+    ser.close()
+    return
+''' Return number (0 indexed) of sensor '''
+def pos2Num(x,y):
+    if y == 1:
+        return x+1
+    elif y == 0:
+        return x+4
+    else:
+        return x+7
+def synthComm():
+    timeStart = time.time()
+    fluidsynth.init(config.sf2Path)
+    ser = serial(config.megaPath, config.megaBaud,timeout = 0)
+
+    # code for print and parse goes here
+    while config.playing:
+        info = serial.readline()
+        if info is not None:
+
+                time, x, y, vel = parseInput(timeStart, info)
+                n = pos2Num(x,y)
+                note = Note(names[n],3)
+                note.velocity = vel
+                fluidsynth.play_Note(note)
+                # print "-----"
+                # print "Time: {0} \nPosition: {1},{2}\n Velocity: {3}".format(time, x, y, vel)
+                # print "-----"
+
+                # config.userHits = np.hstack((config.userHits, np.array([[time],[vel],[x],[y])))
     # when done, close out connection
     ser.close()
     return
 
-
+class megaSynth(threading.Thread):
+    def __init__(self, threadID, name, notStore = True, spoof = False):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.notStore = notStore
+        self.spoof = spoof
+    def run(self):
+        if not self.spoof:
+            synthComm(notStore = notStore)
 class megaComm(threading.Thread):
     def __init__(self, threadID, name, notStore = True, spoof = False):
         threading.Thread.__init__(self)
@@ -73,7 +117,7 @@ class unoComm(threading.Thread):
     def run(self):
         if not self.spoof:
             comm = serial(config.unoPath, config.unoBaud, timeout = 0)
-        # TODO: send message that will start video
+        # TODO: send message that will start video, add tempo message
         time.sleep(config.duration)
         config.recording = False
         # TODO: send message that will end video
