@@ -198,6 +198,8 @@ def cameraInstructions(choice = 0):
 	frontEntry = Tkinter.Label(camFrame, textvariable = frontPath, relief = Tkinter.SUNKEN).grid(row =6, column = 0)
 	frontButton = Tkinter.Button(camFrame, text = "...", command = setFront).grid(row = 6, column = 1)	
 	
+
+
 	def continueProcess0():
 		# TODO: check option choice, and based on that decide to process alone or correlate with ground truth
 		if os.path.isfile(sidePath.get()) and os.path.isfile(ohpath.get()):
@@ -227,9 +229,11 @@ def cameraInstructions(choice = 0):
 		else:
 			tkMessageBox.showinfo("ERROR", "Invalid files, try again")
 			return;
-		
+	def skipProcess0():
+		pass
 	if choice ==0:
 		nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess0).grid(row =3, column =5)
+		skipButton = Tkinter.Button(camFrame, text = "SKIP", command = skipProcess0)
 	elif choice == 2:
 		nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess2).grid(row =3, column =5)		
 	else:
@@ -363,14 +367,16 @@ def FUN():
 	sf2 = Tkinter.StringVar()
 	def pickSF2():
 		sf2.set(tkFileDialog.askopenfilename(defaultextension = '.sf2'))
+		cfg.sf2Path = sf2.get()
 		return
 	def startFun():
 		# check that 
 		if sf2.get() is None:
 			tkMessageBox.showinfo('ERROR', 'Please select a SoundFont file')
-		pass
+		else:
+			synthMode()
 	clearOut(root)
-	funFrame = Tkinter.Frame(root).pack()
+	funFrame = Tkinter.Frame(root).grid()
 	serialList = readHits.serial_ports()
 	megaScroll = Tkinter.Scrollbar(funFrame, orient = Tkinter.HORIZONTAL)
 	megaScroll.grid(row = 2, column =0, sticky = Tkinter.E+ Tkinter.W)
@@ -387,7 +393,7 @@ def FUN():
 
 	sf2Label = Tkinter.Label(funFrame, textvariable = sf2).grid(row = 3, column = 0)
 	sf2Button = Tkinter.Button(funFrame, text = "...", command = pickSF2).grid(row = 3, column = 1)
-	startButton = Tkinter.Button(funFrame, text = "START", command = startFun).grid(row = 0, column = 3)
+	startButton = Tkinter.Button(funFrame, text = "To Play Space", command = startFun).grid(row = 0, column = 3)
 	backButton = Tkinter.Button(funFrame, text = "BACK", command = viewInit).grid(row = 1, column = 3)
 	# print "AWWW YEEAAAHHHH"
 
@@ -397,7 +403,7 @@ def synthMode():
 	synthFrame = Tkinter.Frame(root)
 	synthFrame.grid()
 	# cfg.playing = True
-	synth = readHits.synthComm(1, "SynthComm", spoof = False)
+	synth = readHits.megaSynth(1, "SynthComm", spoof = False)
 	def setThread():
 		cfg.playing = True
 		synth.start()
@@ -406,8 +412,9 @@ def synthMode():
 		synth.join()
 		FUN()
 	startButt = Tkinter.Button(synthFrame, text = 'START', command = setThread)
+	startButt.grid(row = 0, column = 0)
 	backButt = Tkinter.Button(synthFrame, text = 'BACK', command = stopThread)
-	backButt.grid(row = 0, column = 0)
+	backButt.grid(row = 1, column = 0)
 	
 
 ''' Empties all widgets out of a parent '''

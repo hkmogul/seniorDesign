@@ -13,20 +13,24 @@ from mingus.midi import fluidsynth
 import config
 from mingus.containers import Note
 
-names = ['C','D','E','F','G','A','B']
+names = ['C','D','E','F','G','A','B','C','E']
 ''' Parse string from arduino serial monitor to return location, velocity,
     time, etc
     Example expected string to parse would be: '01-1056'= northwest velocity = 56
     timeStart should be an int in ms declared
 '''
 def parseInput(timeStart, input = None):
-    if input is None:
+    if input is '':
         return None
     # get time first to mitigate delays- convert to millis to prevent overflow
-    timeDiff = (timeStart - time.time()).microseconds/1000
+    # timeDiff = (timeStart - time.time()).microseconds/1000
+    # print time.time()
+    timeDiff = (time.time()-timeStart)
+    # print input
     x = int(input[:2])
+
     y = int(input[2:4])
-    vel = int(input[-3:])
+    vel = int(input[4:])
     return timeDiff, x, y, vel
 
 
@@ -35,20 +39,20 @@ def parseInput(timeStart, input = None):
 '''
 def openComm(notStore= True):
     timeStart = time.time()
-    ser = serial(config.megaPath, config.megaBaud,timeout = 0)
+    ser = serial.Serial(config.megaPath, config.megaBaud,timeout = 1)
     if notStore:
         # code for print and parse goes here
         while config.recording:
-            info = serial.readline()
-            if info is not None:
-                    time, x, y, vel = parseInput(timeStart, info)
+            info = ser.readline()
+            if info is not '':
+                    timeElp, x, y, vel = parseInput(timeStart, info)
                     print "-----"
-                    print "Time: {0} \nPosition: {1},{2}\n Velocity: {3}".format(time, x, y, vel)
+                    print "Time: {0} \nPosition: {1},{2}\n Velocity: {3}".format(timeElp, x, y, vel)
                     print "-----"
     else:
         while config.recording:
-            info = serial.readline()
-            if info is not None:
+            info = ser.readline()
+            if info is not '':
                 time, x, y, vel = parseInput(timeStart, info)
                 newHit = np.array([[time], [vel], [x], [y]])
                 config.userHits = np.hstack((config.userHits, newHit))
@@ -64,23 +68,37 @@ def pos2Num(x,y):
     else:
         return x+7
 def synthComm():
+    # print config.megaPath
+    # print config.megaBaud
     timeStart = time.time()
     fluidsynth.init(config.sf2Path)
-    ser = serial(config.megaPath, config.megaBaud,timeout = 0)
-
+    # print config.sf2Path
+    # print timeStart
+    note = Note()
+    ser = serial.Serial(config.megaPath, config.megaBaud,timeout = 1)
+    # print "HELLO HILARY I AM HERE"
     # code for print and parse goes here
     while config.playing:
-        info = serial.readline()
-        if info is not None:
+        info = ser.readline()
+        if info is not '' and len(info) == 9:
+            # print info
+            # print timeStart
+            fluidsynth.stop_Note(note)
+            # print "---"
+            # print len(info)
+            # print "---"
 
-                time, x, y, vel = parseInput(timeStart, info)
-                n = pos2Num(x,y)
-                note = Note(names[n],3)
-                note.velocity = vel
-                fluidsynth.play_Note(note)
-                # print "-----"
-                # print "Time: {0} \nPosition: {1},{2}\n Velocity: {3}".format(time, x, y, vel)
-                # print "-----"
+            timeElp, x, y, vel = parseInput(timeStart, info)
+            n = pos2Num(x,y)
+            # print n
+            # print names[n]
+            note = Note(names[n],3)
+            note.velocity = vel
+            fluidsynth.play_Note(note)
+
+            print "-----"
+            print "Time: {0} \nPosition: {1},{2}\n Velocity: {3}".format(timeElp, x, y, vel)
+            print "-----"
 
                 # config.userHits = np.hstack((config.userHits, np.array([[time],[vel],[x],[y])))
     # when done, close out connection
@@ -96,7 +114,7 @@ class megaSynth(threading.Thread):
         self.spoof = spoof
     def run(self):
         if not self.spoof:
-            synthComm(notStore = notStore)
+            synthComm()
 class megaComm(threading.Thread):
     def __init__(self, threadID, name, notStore = True, spoof = False):
         threading.Thread.__init__(self)
