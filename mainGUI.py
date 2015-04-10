@@ -234,6 +234,7 @@ def cameraInstructions(choice = 0):
 	if choice ==0:
 		nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess0).grid(row =3, column =5)
 		skipButton = Tkinter.Button(camFrame, text = "SKIP", command = skipProcess0)
+		skipButton.grid(row =4, column = 5)
 	elif choice == 2:
 		nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess2).grid(row =3, column =5)		
 	else:
