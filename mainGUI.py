@@ -416,8 +416,73 @@ def synthMode():
 	startButt.grid(row = 0, column = 0)
 	backButt = Tkinter.Button(synthFrame, text = 'BACK', command = stopThread)
 	backButt.grid(row = 1, column = 0)
-	
+''' for showing results '''	
+def showResults(compared):
+	# generate grid + canvas in each area
+	# check that file exists for each, then show
+	# if not, show question mark bitmap
+	clearOut(root)
+	resultFrame = Tkinter.Frame(root)
+	resultFrame.grid()
+	#the general sheet music style image
+	# TODO: make it scrollable
+	genCanvas = Tkinter.Canvas(resultFrame, width = 800, height = 600)
+	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif")):
+		genPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif"))
+		genCanvas.create_image(0,0,image= genPic)
+	else: 
+		# make question mark
+	genCanvas.grid(row = 0, column = 0)
+	genScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
+	genScroll.grid(row = 1, column = 0)
+	genCanvas.config(xscrollcommand = genScroll.set)
+	genScroll.config(command = genCanvas.xview)
 
+	# locations
+	locCanvas = Tkinter.Canvas(resultFrame, width = 400, height = 400)
+	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "locations.gif")):
+		locPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "locations.gif"))
+		locCanvas.create_image(0,0,image= locPic)
+	else: 
+		# make question mark
+	locCanvas.grid(row = 2, column = 0)
+	locScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
+	locScroll.grid(row = 3, column = 0)
+	locCanvas.config(xscrollcommand = locScroll.set)
+	locScroll.config(command = locCanvas.xview)
+	#heights
+	heightCanvas = Tkinter.Canvas(resultFrame, width = 400, height = 400)
+	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "heights.gif")):
+		heightPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "heights.gif"))
+		heightCanvas.create_image(0,0,image= heightPic)
+	else: 
+		# make question mark
+	heightCanvas.grid(row = 2, column = 1)
+	heightScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
+	heightScroll.grid(row = 3, column = 1)
+	heightCanvas.config(xscrollcommand = heightScroll.set)
+	heightScroll.config(command = heightCanvas.xview)
+
+	# angles
+	angleCanvas = Tkinter.Canvas(resultFrame, width = 400, height = 400)
+	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "angles.gif")):
+		anglePic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "angles.gif"))
+		angleCanvas.create_image(0,0,image= anglePic)
+	else: 
+		# make question mark
+	angleCanvas.grid(row = 2, column = 2)
+	angleScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
+	angleScroll.grid(row = 3, column = 2)
+	angleCanvas.config(xscrollcommand = angleScroll.set)
+	angleScroll.config(command = angleCanvas.xview)
+	#if compared, add text area of results
+	if compared:
+		#LOLOLOLOLOLOL
+	#home & quit button
+	homeButton = Tkinter.Button(resultFrame, text = "HOME", command = viewInit)
+	quitButton = Tkinter.Button(resultFrame, text = "QUIT", command = quit)
+	homeButton.grid(row = 0, column = 10)
+	quitButton.grid(row = 1, column = 10)
 ''' Empties all widgets out of a parent '''
 def clearOut(parent):
 	for widget in parent.winfo_children():
