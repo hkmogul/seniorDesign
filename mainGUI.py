@@ -29,6 +29,8 @@ gtpath = Tkinter.StringVar()
 tempo = Tkinter.IntVar()
 duration = Tkinter.IntVar()
 nameFolder = Tkinter.StringVar()
+recVar = Tkinter.IntVar()
+showVar = Tkinter.IntVar()
 def quit():
 	root.quit()
 def reset():
@@ -38,10 +40,14 @@ def reset():
 	tempo.set(40)
 	duration.set(0)
 	nameFolder.set('')
+	recVar.set(0)
+	showVar.set(0)
+
 def credits():
 	tkMessageBox.showinfo("Credits", "Team ColDRUMbia 5ever")
 #initial window
 def viewInit():
+
 	clearOut(root)
 	cfg.resetAll()
 	reset()
@@ -97,10 +103,8 @@ def option0():
 	durationEntry = Tkinter.Spinbox(frame0, from_ = 1, to = 300, textvariable = duration, command = setTempDur).grid(row = 7, column = 0)
 	
 
-	megaScroll = Tkinter.Scrollbar(frame0, orient = Tkinter.HORIZONTAL)
-	megaScroll.grid(row = 10, column =0, sticky = Tkinter.E+ Tkinter.W)
-	unoScroll = Tkinter.Scrollbar(frame0, orient = Tkinter.HORIZONTAL)
-	unoScroll.grid(row = 10, column = 1, sticky = Tkinter.E+ Tkinter.W)
+
+
 	# arduino selection boxes
 	# print type(megaScroll)
 	serialList = readHits.serial_ports()
@@ -113,7 +117,11 @@ def option0():
 	for address in serialList:
 		megaBox.insert(Tkinter.END, address)
 	unoBox.grid(row = 8, column = 1)
-	megaBox.grid(row = 9, column = 1)
+	megaBox.grid(row = 10, column = 1)
+	megaScroll = Tkinter.Scrollbar(frame0, orient = Tkinter.HORIZONTAL)
+	megaScroll.grid(row = 11, column =1, sticky = Tkinter.E+ Tkinter.W)
+	unoScroll = Tkinter.Scrollbar(frame0, orient = Tkinter.HORIZONTAL)
+	unoScroll.grid(row = 9, column = 1, sticky = Tkinter.E+ Tkinter.W)
 	megaBox.config(xscrollcommand = megaScroll.set)
 	megaScroll.config(command = megaBox.xview)
 	unoBox.config(xscrollcommand = unoScroll.set)
@@ -125,41 +133,82 @@ def option0():
 	unoBox.bind('<<ListboxSelect>>', unoSelect)
 	megaBox.bind('<<ListboxSelect>>', megaSelect)
 
+
+
+	# checkboxes for if webcam is being used in this session
+	recCheck = Tkinter.Checkbutton(frame0, text = "Record With Webcam", variable = recVar)
+	showCheck = Tkinter.Checkbutton(frame0, text = "Show Webcam View While Playing", variable = showVar)
+	recCheck.grid(row = 0, column = 3)
+	showCheck.grid(row = 1, column = 3)
+
 	homeButton = Tkinter.Button(frame0, text = "Back", command = viewInit).grid(row = 0, column = 5)
-	# TODO: reset fields function outside of this loop?
 	resetButton = Tkinter.Button(frame0, text = "Reset", command = reset).grid(row = 1, column = 5)
-	
 	startButton = Tkinter.Button(frame0, text = "START", command = option0_start, bg = 'GREEN').grid(row = 2, column = 5)
+
+	#give everything some space
 	padWidgets(frame0)
 	return
 def option0_start():
 	#TODO: function to pick up/set all appropriate values
 	# check if os join of path and name folder exists, and if it does, return a message box
 	if os.path.isdir(os.path.join(cfg.userPath, nameFolder.get())):
+
 		tkMessageBox.showinfo("ERROR", "Folder already exists! Pick another")
 		return
 	# check for empty strings
 	elif len(nameFolder.get()) ==0  or duration.get() is None or len(userpath.get()) == 0 or cfg.unoPath is '' or cfg.megaPath is '' or cfg.megaPath is cfg.unoPath:
 		tkMessageBox.showinfo("ERROR", "Missing data, please fill in everything")
 		return
+	else:
+		clearOut(root)
+		frame0A = Tkinter.Frame(root)
+		frame0A.grid()
+		nowRecording = Tkinter.Label(frame0A, text = "NOW RECORDING", bg = 'GREEN')
+
 	cfg.userFolder = nameFolder.get()
 	os.mkdir(os.path.join(cfg.userPath, cfg.userFolder))
-	clearOut(root)
-	frame0A = Tkinter.Frame(root).grid()
+
 	# maybe make a thing that flashes based on tempo in recording adjustment thread? if tempo is set, that is
-	nowRecording = Tkinter.Label(frame0A, text = "NOW RECORDING", bg = 'GREEN').grid()
+
 
 	#time.sleep(0.1)
+
 	mega = readHits.megaComm(1, "MegaComm", spoof = True)
 	uno = readHits.unoComm(2, "UnoComm", spoof = True)
+	# web = img.webCam(3, "Webcam", saving = recVar.get(), showing = showVar.get())
+
 	uno.start()
 	time.sleep(.0001)
+
+	# web.start()
 	mega.start()
+	# run opencv vidcapture in main thread
+
+	if showVar.get() or recVar.get():
+		cap = cv2.VideoCapture(0)
+		# first read to get the size
+		_, image = cap.read()
+		if recVar.get():
+
+			vid = cv2.VideoWriter()
+        	suc = vid.open(filename = os.path.join(cfg.userPath,'CamView.avi'), fourcc = cv2.cv.CV_FOURCC('H','2','6','4'), fps = 30, frameSize = image.shape)
+
+        	# suc = vid.open(filename = os.path.join(cfg.userPath, cfg.userFolder, 'CamView.avi'), fourcc = cv2.cv.CV_FOURCC('H','2','6','4'), fps = 30, frameSize = image.shape)
+		while(cfg.recording):
+			_, image = cap.read()
+			if showVar.get():
+				cv2.imshow("Webcam View", image)
+			if recVar.get():
+				vid.write(image)
+		cv2.destroyWindow("Webcam View")
+
+
 	# debug printing TODO: dummy out, and set spoof to False
 	print "RECORDING NOW AT"
 	print time.localtime()
 	uno.join()
 	mega.join()
+	# web.join()
 	print "FINISHING RECORDING"
 	print time.localtime()
 	cameraInstructions(choice = 0)
@@ -172,17 +221,15 @@ def option0_start():
 def cameraInstructions(choice = 0):
 	ohPath = Tkinter.StringVar()
 	sidePath = Tkinter.StringVar()
-	frontPath = Tkinter.StringVar()
+	# frontPath = Tkinter.StringVar()
 	def setOH():
 		ohPath.set(tkFileDialog.askopenfilename(defaultextension = '.avi'))
 		return
 	def setSide():
 		sidePath.set(tkFileDialog.askopenfilename(defaultextension = '.avi'))
 		return
-	def setFront():
-		frontPath.set(tkFileDialog.askopenfilename(defaultextension = '.avi'))
-		return
-	tkMessageBox.showinfo("Instructions for Camera Access", "Plug in camera USB hub and select Overhead, Side, and Front video files respectively")
+
+	tkMessageBox.showinfo("Instructions for Camera Access", "Plug in camera USB hub and select Overhead, and Side video files respectively")
 	clearOut(root)
 	camFrame = Tkinter.Frame(root).grid()
 	# list of labels and textentries with buttons next to them for files
@@ -194,9 +241,9 @@ def cameraInstructions(choice = 0):
 	sideEntry = Tkinter.Label(camFrame, textvariable = sidePath, relief = Tkinter.SUNKEN).grid(row =4, column = 0)
 	sideButton = Tkinter.Button(camFrame, text = "...", command = setSide).grid(row = 4, column = 1)	
 
-	frontLabel = Tkinter.Label(camFrame, text ="Front View File").grid(row = 5, column = 0)
-	frontEntry = Tkinter.Label(camFrame, textvariable = frontPath, relief = Tkinter.SUNKEN).grid(row =6, column = 0)
-	frontButton = Tkinter.Button(camFrame, text = "...", command = setFront).grid(row = 6, column = 1)	
+	# frontLabel = Tkinter.Label(camFrame, text ="Front View File").grid(row = 5, column = 0)
+	# frontEntry = Tkinter.Label(camFrame, textvariable = frontPath, relief = Tkinter.SUNKEN).grid(row =6, column = 0)
+	# frontButton = Tkinter.Button(camFrame, text = "...", command = setFront).grid(row = 6, column = 1)	
 	
 
 
@@ -207,10 +254,11 @@ def cameraInstructions(choice = 0):
 			cfg.userAngles = img.ohProcess(ohPath.get())
 			shutil.copy2(sidePath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'sideView.avi'))
 			shutil.copy2(ohPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'overheadView.avi'))
-			shutil.copy2(frontPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'frontView.avi'))
+			# shutil.copy2(frontPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'frontView.avi'))
 			# create analysis images, and go to screen to present them- maybe have message box saying where everything is saved
 			perf.wholeShebang(alone = True)
 			# move onto window that nicely shows images
+			showResults()
 		else:
 			tkMessageBox.showinfo("ERROR", "Invalid files, try again")
 			return;
@@ -222,21 +270,29 @@ def cameraInstructions(choice = 0):
 			cfg.userAngles = img.ohProcess(ohPath.get())
 			shutil.copy2(sidePath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'sideView.avi'))
 			shutil.copy2(ohPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'overheadView.avi'))
-			shutil.copy2(frontPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'frontView.avi'))
+			# shutil.copy2(frontPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'frontView.avi'))
 			# create analysis images, and go to screen to present them- maybe have message box saying where everything is saved
 			perf.wholeShebang(alone = False)
 			# move onto window that nicely shows images
+			showResults()
 		else:
 			tkMessageBox.showinfo("ERROR", "Invalid files, try again")
 			return;
 	def skipProcess0():
-		pass
+		tkMessageBox.showinfo("Video Selection Skipped", "Will show just the sensor data")
+		showResults(compared = False)
+	
+	def skipProcess2():
+		tkMessageBox.showinfo("Video Selection Skipped", "Will show just the sensor data")
+		showResults(compared = True)		
 	if choice ==0:
 		nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess0).grid(row =3, column =5)
 		skipButton = Tkinter.Button(camFrame, text = "SKIP", command = skipProcess0)
 		skipButton.grid(row =4, column = 5)
 	elif choice == 2:
-		nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess2).grid(row =3, column =5)		
+		nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess2).grid(row =3, column =5)	
+		skipButton = Tkinter.Button(camFrame, text = "SKIP", command = skipProcess2)
+		skipButton.grid(row =4, column = 5)	
 	else:
 		print "NOT THERE YET"
 	
@@ -266,7 +322,16 @@ def pathOpen(option = 0):
 def option1():
 	#TODO: label/entry/button for path for gt and user paths
 	# then run same functions as option2 after recording?
-	pass
+	clearOut(root)
+	frame1 = Tkinter.Frame(root)
+	userLabel = Tkinter.Label(frame1, text = "User Path")
+	nameLabel = Tkinter.Label(frame1, text = "Name of Example/Folder")
+	nameLabel.grid(row = 0,column = 0)
+
+	nameEntry = Tkinter.Entry(frame1, textvariable = nameFolder)
+	nameEntry.grid(row = 1,column = 0)
+	
+	backButton = Tkinter.Button(frame1, text = "BACK", command = viewInit)
 
 ''' recording a new attempt.  follows procession of first, with side note of selecting GT folder '''
 def option2():
@@ -398,7 +463,7 @@ def FUN():
 	backButton = Tkinter.Button(funFrame, text = "BACK", command = viewInit).grid(row = 1, column = 3)
 	# print "AWWW YEEAAAHHHH"
 
-
+''' has start/stop threads, hopefully someday add changing octaves/instruments '''
 def synthMode():
 	clearOut(root)
 	synthFrame = Tkinter.Frame(root)
@@ -426,12 +491,12 @@ def showResults(compared):
 	resultFrame.grid()
 	#the general sheet music style image
 	# TODO: make it scrollable
-	genCanvas = Tkinter.Canvas(resultFrame, width = 800, height = 600)
+	genCanvas = Tkinter.Canvas(resultFrame)
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif")):
 		genPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif"))
 		genCanvas.create_image(0,0,image= genPic)
 	else: 
-		# make question mark
+		pass
 	genCanvas.grid(row = 0, column = 0)
 	genScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
 	genScroll.grid(row = 1, column = 0)
@@ -445,6 +510,7 @@ def showResults(compared):
 		locCanvas.create_image(0,0,image= locPic)
 	else: 
 		# make question mark
+		pass
 	locCanvas.grid(row = 2, column = 0)
 	locScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
 	locScroll.grid(row = 3, column = 0)
@@ -457,6 +523,7 @@ def showResults(compared):
 		heightCanvas.create_image(0,0,image= heightPic)
 	else: 
 		# make question mark
+		pass
 	heightCanvas.grid(row = 2, column = 1)
 	heightScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
 	heightScroll.grid(row = 3, column = 1)
@@ -470,6 +537,7 @@ def showResults(compared):
 		angleCanvas.create_image(0,0,image= anglePic)
 	else: 
 		# make question mark
+		pass
 	angleCanvas.grid(row = 2, column = 2)
 	angleScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
 	angleScroll.grid(row = 3, column = 2)
@@ -478,6 +546,7 @@ def showResults(compared):
 	#if compared, add text area of results
 	if compared:
 		#LOLOLOLOLOLOL
+		pass
 	#home & quit button
 	homeButton = Tkinter.Button(resultFrame, text = "HOME", command = viewInit)
 	quitButton = Tkinter.Button(resultFrame, text = "QUIT", command = quit)

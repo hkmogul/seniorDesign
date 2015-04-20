@@ -5,6 +5,8 @@ import cv2
 import math
 import config
 import os
+import threading
+import time
 
 ''' check if number is undefined '''
 def isNan(num):
@@ -135,4 +137,39 @@ def ohProcess(vidPath, fs = 120, finePos = False):
         fc = fc+1
         cv2.waitKey(1)
     return angles
+
+# ''' Uses default user webcam to show images, and possibly write to file as well'''
+# def webCamRun(saving = False, showing = False):
+#     cap = cv2.VideoCapture(0)
+#     _, frame = cap.read()
+#     print "At start of webCamRun"
+#     if saving:
+#         print "initializing VideoWriter"
+#         vid = cv2.VideoWriter(os.path.join(config.userPath, config.userFolder, 'CamView.avi'), fourcc = cv2.CV_FOURCC('H','2','6','4'), fps = 30, frame_size = frame.shape)
+#         suc = vid.open()
+#     while(config.recording or config.playing):
+#         print "in collection loop"
+#         _, frame = cap.read()
+#         if showing:
+#             # cv2.imshow('Webcam image', frame)
+#             pass
+#         if saving:
+#             vid.write(frame)
+    
+
+
+
+# ''' Thread for showing webcam footage, and possibly saving it to file '''
+# class webCam(threading.Thread):
+#     def __init__(self, threadID, name, saving, showing):
+#         threading.Thread.__init__(self)
+#         self.threadID = threadID
+#         self.name = name
+#         self.saving = saving
+#         self.showing = showing
+#         print "Im initialized!"
+#     def run(self):
+#         print "IN start"
+#         webCamRun(self.saving, self.showing)
+
 
