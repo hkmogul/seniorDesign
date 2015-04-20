@@ -71,7 +71,7 @@ gtPath = ''
 unoPath = ''
 megaPath = ''
 unoBaud = 9600
-megaBaud = 9600
+megaBaud = 19200
 
 ''' path of sf2 file for synthesizing '''
 sf2Path = ''
