@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import config
+import config as cfg 
 import matplotlib.figure as fig
 import math
 # analysis functions for analyzing the output of
@@ -75,7 +75,7 @@ def gradeRef(gt, userdata, error = 50):
     return results, data
 ''' make sheet music style printout 
     saves to either CWD (debug = True)
-    or to user Path in config
+    or to user Path in cfg
     sig = numerator of time signature (how many beats per measure)
 '''
 def pltGeneral(userdata, gt = None, debug = False, sig = 4):
@@ -85,7 +85,7 @@ def pltGeneral(userdata, gt = None, debug = False, sig = 4):
     if debug:
         tempo = 120
     else:
-        tempo = config.tempo
+        tempo = cfg.tempo
     interval =60000/tempo
     # user = plt.stem(userdata[0], userdata[1])
     user = plt.plot(userdata[0], userdata[1], 'o')
@@ -109,7 +109,7 @@ def pltGeneral(userdata, gt = None, debug = False, sig = 4):
     if debug:
         plt.savefig('hitSheet.gif')
     else:
-        plt.savefig(os.path.join(config.userpath, 'hitSheet.gif'))
+        plt.savefig(os.path.join(cfg.userpath, 'hitSheet.gif'))
     return
 ''' scatterplot of positions
 TODO: size of points based on # of hits
@@ -140,7 +140,7 @@ def pltLocations(userdata, gt = None, debug = False):
     if debug:
         plt.savefig('locations.gif')
     else:
-        plt.savefig(os.path.join(config.userpath, 'locations.gif'))
+        plt.savefig(os.path.join(cfg.userpath, 'locations.gif'))
     return
 
 def sizePlot():
@@ -161,7 +161,7 @@ def pltHeights(userdata, gt = None, debug = False):
     if debug:
         plt.savefig('heights.gif')
     else:
-        plt.savefig(os.path.join(config.userpath, 'heights.gif'))
+        plt.savefig(os.path.join(cfg.userpath, 'heights.gif'))
     return
 ''' angles vs time '''
 def pltAngles(userdata, gt= None, debug = False):
@@ -172,7 +172,7 @@ def pltAngles(userdata, gt= None, debug = False):
     if debug:
         plt.savefig('angles.gif')
     else:
-        plt.savefig(os.path.join(config.userpath, 'angles.gif'))
+        plt.savefig(os.path.join(cfg.userpath, 'angles.gif'))
     return
 
 
@@ -181,20 +181,18 @@ def pltAngles(userdata, gt= None, debug = False):
  '''
 def wholeShebang(alone):
     if alone:
-        pltGeneral(config.userHits)
-        pltHeights(config.userHeights)
-        pltAngles(config.userAngles)
-        pltLocations(config.userHits)
+        pltGeneral(cfg.userHits)
+        pltHeights(cfg.userHeights)
+        pltAngles(cfg.userAngles)
+        pltLocations(cfg.userHits)
     else:
-        config.error, config.extra = perf.gradeRef(config.groundTruth, config.userHits)
-        pltGeneral(config.userHits, config.groundTruth)
-        pltHeights(config.userHeights, config.gtHeights)
-        pltAngles(config.userAngles, config.gtAngles)
-        pltLocations(config.userHits, config.groundTruth)       
+        cfg.error, cfg.extra = perf.gradeRef(cfg.groundTruth, cfg.userHits)
+        pltGeneral(cfg.userHits, cfg.groundTruth)
+        pltHeights(cfg.userHeights, cfg.gtHeights)
+        pltAngles(cfg.userAngles, cfg.gtAngles)
+        pltLocations(cfg.userHits, cfg.groundTruth)       
 
-''' Loads .mat files and respective arrays and values - return True if successful '''
-def loadPrev():
-    pass
+
 ''' better "where" function for finding actual locations
     returns amount of hits of a position given
  '''
@@ -204,9 +202,7 @@ def dblWhere(data, x,y):
     n = np.logical_and(m[0], m[1])
     # print "n is {}".format(n)
     return np.sum(n)
-''' returns length 9 vector 
-
-
+''' returns length 9 vector corresponding to amount of hits in each locations
 
 '''
 def positionAmts(data):

@@ -88,6 +88,21 @@ def loadGT():
         return True 
     else:
         return False
+
+''' load user data from .mat file.  useful for option1 '''
+def loadUserData():
+    if os.path.isfile(os.path.join(userPath, userFolder, 'data.mat')):
+        mat_contents = scipy.io.loadmat(os.path.join(userPath, userFolder, 'data.mat'))
+        userHeights = mat_contents['heights']
+        userAngles = mat_contents['angles']
+        userHits = mat_contents['hits']
+        tempo = mat_contents['tempo']
+        duration = mat_contents['duration']
+
+def saveData():
+    name = os.path.join(userPath, userFolder, 'data.mat')
+    m_dict = {'heights': userHeights, 'angles': userAngles, 'hits': userHits, 'tempo': tempo, 'duration': duration}
+    scipy.io.savemat(name, m_dict)
 def setUserPath(name):
     userPath = name
     if not os.path.exists(userPath):

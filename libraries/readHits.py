@@ -13,6 +13,7 @@ from mingus.midi import fluidsynth
 import config
 from mingus.containers import Note
 
+octave = 4
 names = ['C','D','E','F','G','A','B','C','E']
 ''' Parse string from arduino serial monitor to return location, velocity,
     time, etc
@@ -92,7 +93,7 @@ def synthComm():
             n = pos2Num(x,y)
             # print n
             # print names[n]
-            note = Note(names[n],3)
+            note = Note(names[n],octave)
             note.velocity = vel
             fluidsynth.play_Note(note)
 
