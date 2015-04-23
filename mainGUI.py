@@ -7,6 +7,7 @@ import os
 import sys
 import cv2
 import Tkinter
+import ImageTk
 import matplotlib.pyplot as plt
 import tkMessageBox
 import tkFileDialog
@@ -31,6 +32,8 @@ duration = Tkinter.IntVar()
 nameFolder = Tkinter.StringVar()
 recVar = Tkinter.IntVar()
 showVar = Tkinter.IntVar()
+sf2 = Tkinter.StringVar()
+octave = Tkinter.IntVar()
 def quit():
 	root.quit()
 def reset():
@@ -42,6 +45,8 @@ def reset():
 	nameFolder.set('')
 	recVar.set(0)
 	showVar.set(0)
+	octave.set(4)
+	readHits.octave = 4
 
 def credits():
 	tkMessageBox.showinfo("Credits", "Team ColDRUMbia 5ever")
@@ -143,12 +148,13 @@ def option0():
 
 	homeButton = Tkinter.Button(frame0, text = "Back", command = viewInit).grid(row = 0, column = 5)
 	resetButton = Tkinter.Button(frame0, text = "Reset", command = reset).grid(row = 1, column = 5)
-	startButton = Tkinter.Button(frame0, text = "START", command = option0_start, bg = 'GREEN').grid(row = 2, column = 5)
+	startButton = Tkinter.Button(frame0, text = "START", command = option0_preStart, bg = 'GREEN').grid(row = 2, column = 5)
 
 	#give everything some space
 	padWidgets(frame0)
 	return
-def option0_start():
+''' lets see if this fixes GUI issue '''
+def option0_preStart():
 	#TODO: function to pick up/set all appropriate values
 	# check if os join of path and name folder exists, and if it does, return a message box
 	if os.path.isdir(os.path.join(cfg.userPath, nameFolder.get())):
@@ -164,6 +170,10 @@ def option0_start():
 		frame0A = Tkinter.Frame(root)
 		frame0A.grid()
 		nowRecording = Tkinter.Label(frame0A, text = "NOW RECORDING", bg = 'GREEN')
+		option0_start()
+
+def option0_start():
+
 
 	cfg.userFolder = nameFolder.get()
 	os.mkdir(os.path.join(cfg.userPath, cfg.userFolder))
@@ -188,18 +198,23 @@ def option0_start():
 		cap = cv2.VideoCapture(0)
 		# first read to get the size
 		_, image = cap.read()
+		print cap.get(cv2.cv.CV_CAP_PROP_FPS)
 		if recVar.get():
-
+			height, width, _ = image.shape
 			vid = cv2.VideoWriter()
-        	suc = vid.open(filename = os.path.join(cfg.userPath,'CamView.avi'), fourcc = cv2.cv.CV_FOURCC('H','2','6','4'), fps = 30, frameSize = image.shape)
 
-        	# suc = vid.open(filename = os.path.join(cfg.userPath, cfg.userFolder, 'CamView.avi'), fourcc = cv2.cv.CV_FOURCC('H','2','6','4'), fps = 30, frameSize = image.shape)
+        	suc = vid.open(filename = os.path.join(cfg.userPath,cfg.userFolder, 'CamView.avi'), fourcc = cv2.cv.CV_FOURCC(*'XVID'), fps = 30, frameSize = (width, height))
+
 		while(cfg.recording):
 			_, image = cap.read()
 			if showVar.get():
 				cv2.imshow("Webcam View", image)
 			if recVar.get():
 				vid.write(image)
+			time.sleep(0.011)
+			# cv2.waitKey(33)
+		# vid.close()
+		cap.release()
 		cv2.destroyWindow("Webcam View")
 
 
@@ -322,16 +337,61 @@ def pathOpen(option = 0):
 def option1():
 	#TODO: label/entry/button for path for gt and user paths
 	# then run same functions as option2 after recording?
+	user = Tkinter.StringVar()
+	def setGTPath():
+		gtpath.set(tkFileDialog.askdirectory(parent = root))
+		cfg.gtPath = gtpath.get()
+	def setUserPathFold():
+	
+		temp = tkFileDialog.askdirectory(parent = root)
+		cfg.userPath = os.path.split(temp)[0]
+		cfg.userFolder = os.path.split(temp)[1]
+		# TODO delete this
+		print os.path.split(temp)
+		userpath.set(cfg.userPath)
+		nameFolder.set(cfg.userFolder)
+		user.set(os.path.join(cfg.userPath, cfg.userFolder))
 	clearOut(root)
 	frame1 = Tkinter.Frame(root)
-	userLabel = Tkinter.Label(frame1, text = "User Path")
-	nameLabel = Tkinter.Label(frame1, text = "Name of Example/Folder")
-	nameLabel.grid(row = 0,column = 0)
+	frame1.grid()
+	userLabel = Tkinter.Label(frame1, text = "User Folder")
+	gtLabel = Tkinter.Label(frame1, text = "Name of Example/Folder")
+	gtLabel.grid(row = 0,column = 0)
+	userLabel.grid(row = 1, column = 0)
+	name = Tkinter.Label(frame1, textvariable = user)
+	name.grid(row = 1, column =1)
+	gt = Tkinter.Label(frame1, textvariable = gtpath)
+	gt.grid( row = 0, column = 1)
+	userButton = Tkinter.Button(frame1, text = '...', command = setUserPathFold)
+	userButton.grid(row =1, column = 2)
+	gtButton = Tkinter.Button(frame1, text = '...', command = setGTPath)
+	gtButton.grid(row = 0, column =2)
 
-	nameEntry = Tkinter.Entry(frame1, textvariable = nameFolder)
-	nameEntry.grid(row = 1,column = 0)
+
 	
 	backButton = Tkinter.Button(frame1, text = "BACK", command = viewInit)
+	startButton = Tkinter.Button(frame1, text = "START", command = option1_start)
+	backButton.grid(row = 0, column = 10)
+	startButton.grid(row = 1, column = 10)
+
+
+
+def option1_start():
+	#TODO ALL THIS SHIT
+	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, 'data.mat')):
+		cfg.loadUserData()
+	else:
+		tkMessageBox.showinfo('ERROR', 'No data.mat file found in user folder')
+		return
+	if os.path.isfile(os.path.join(cfg.gtPath, 'data.mat')):
+		cfg.loadGT()
+	else:
+		tkMessageBox.showinfo('ERROR', 'No data.mat file found in GT folder')
+		return	
+	# check if there are images first, so we dont have to run video processing again
+	perf.wholeShebang()	
+	showResults()
+	
 
 ''' recording a new attempt.  follows procession of first, with side note of selecting GT folder '''
 def option2():
@@ -430,7 +490,7 @@ def option2_start():
 	base window: set mega path and sf2 path
 '''
 def FUN():
-	sf2 = Tkinter.StringVar()
+	# sf2 = Tkinter.StringVar()
 	def pickSF2():
 		sf2.set(tkFileDialog.askopenfilename(defaultextension = '.sf2'))
 		cfg.sf2Path = sf2.get()
@@ -465,6 +525,9 @@ def FUN():
 
 ''' has start/stop threads, hopefully someday add changing octaves/instruments '''
 def synthMode():
+	if sf2.get() is "":
+		tkMessageBox.showinfo("ERROR", "please select a .sf2 file")
+		return
 	clearOut(root)
 	synthFrame = Tkinter.Frame(root)
 	synthFrame.grid()
@@ -477,18 +540,26 @@ def synthMode():
 		cfg.playing = False
 		synth.join()
 		FUN()
+	def setOctave():
+		readHits.octave= octave.get()
+	octLabel = Tkinter.Label(synthFrame, text = "Octave").grid(row = 4, column = 0)
+	tempoEntry = Tkinter.Spinbox(synthFrame, from_ = 1, to = 8, textvariable = octave, command  = setOctave).grid(row = 5, column = 0)
+	
+
 	startButt = Tkinter.Button(synthFrame, text = 'START', command = setThread)
 	startButt.grid(row = 0, column = 0)
 	backButt = Tkinter.Button(synthFrame, text = 'BACK', command = stopThread)
 	backButt.grid(row = 1, column = 0)
 ''' for showing results '''	
 def showResults(compared):
+	# print cfg.userHits.shape
 	# generate grid + canvas in each area
 	# check that file exists for each, then show
 	# if not, show question mark bitmap
 	clearOut(root)
 	resultFrame = Tkinter.Frame(root)
 	resultFrame.grid()
+	qmark = Tkinter.PhotoImage("bin/qmark.png")
 	#the general sheet music style image
 	# TODO: make it scrollable
 	genCanvas = Tkinter.Canvas(resultFrame)
@@ -496,6 +567,7 @@ def showResults(compared):
 		genPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif"))
 		genCanvas.create_image(0,0,image= genPic)
 	else: 
+		genCanvas.create_image(0,0, image = qmark)
 		pass
 	genCanvas.grid(row = 0, column = 0)
 	genScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
@@ -504,12 +576,14 @@ def showResults(compared):
 	genScroll.config(command = genCanvas.xview)
 
 	# locations
-	locCanvas = Tkinter.Canvas(resultFrame, width = 400, height = 400)
+	locCanvas = Tkinter.Canvas(resultFrame)#, width = 400, height = 400)
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "locations.gif")):
 		locPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "locations.gif"))
 		locCanvas.create_image(0,0,image= locPic)
 	else: 
 		# make question mark
+
+		locCanvas.create_image(0,0, image = qmark)
 		pass
 	locCanvas.grid(row = 2, column = 0)
 	locScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
@@ -517,12 +591,13 @@ def showResults(compared):
 	locCanvas.config(xscrollcommand = locScroll.set)
 	locScroll.config(command = locCanvas.xview)
 	#heights
-	heightCanvas = Tkinter.Canvas(resultFrame, width = 400, height = 400)
+	heightCanvas = Tkinter.Canvas(resultFrame)
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "heights.gif")):
 		heightPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "heights.gif"))
 		heightCanvas.create_image(0,0,image= heightPic)
 	else: 
 		# make question mark
+		heightCanvas.create_image(0,0,image = qmark)
 		pass
 	heightCanvas.grid(row = 2, column = 1)
 	heightScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
@@ -531,12 +606,13 @@ def showResults(compared):
 	heightScroll.config(command = heightCanvas.xview)
 
 	# angles
-	angleCanvas = Tkinter.Canvas(resultFrame, width = 400, height = 400)
+	angleCanvas = Tkinter.Canvas(resultFrame)#, width = 400, height = 400)
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "angles.gif")):
 		anglePic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "angles.gif"))
 		angleCanvas.create_image(0,0,image= anglePic)
 	else: 
 		# make question mark
+		angleCanvas.create_image(0,0, image = qmark)
 		pass
 	angleCanvas.grid(row = 2, column = 2)
 	angleScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
@@ -545,7 +621,7 @@ def showResults(compared):
 	angleScroll.config(command = angleCanvas.xview)
 	#if compared, add text area of results
 	if compared:
-		#LOLOLOLOLOLOL
+		# TODO - text area on midright that shows missed/extra hits, and average error in each thing
 		pass
 	#home & quit button
 	homeButton = Tkinter.Button(resultFrame, text = "HOME", command = viewInit)
