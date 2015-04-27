@@ -7,13 +7,15 @@ import os
 import sys
 import cv2
 import Tkinter
-import ImageTk
+# import ImageTk
 import matplotlib.pyplot as plt
 import tkMessageBox
 import tkFileDialog
 import threading
 import time
 import shutil
+
+# from datetime import datetime
 
 sys.path.append("libraries")
 # self made libraries
@@ -170,6 +172,7 @@ def option0_preStart():
 		frame0A = Tkinter.Frame(root)
 		frame0A.grid()
 		nowRecording = Tkinter.Label(frame0A, text = "NOW RECORDING", bg = 'GREEN')
+		nowRecording.grid()
 		option0_start()
 
 def option0_start():
@@ -193,39 +196,49 @@ def option0_start():
 	# web.start()
 	mega.start()
 	# run opencv vidcapture in main thread
-
+	# print "Recording {0}, Showing {1}".format(recVar.get(), showVar.get())
 	if showVar.get() or recVar.get():
 		cap = cv2.VideoCapture(0)
 		# first read to get the size
 		_, image = cap.read()
-		print cap.get(cv2.cv.CV_CAP_PROP_FPS)
-		if recVar.get():
+		# print cap.get(cv2.cv.CV_CAP_PROP_FPS)
+		if recVar.get() == 1:
 			height, width, _ = image.shape
 			vid = cv2.VideoWriter()
+			suc = vid.open(filename = os.path.join(cfg.userPath,cfg.userFolder, 'CamView.avi'), fourcc = cv2.cv.CV_FOURCC(*'XVID'), fps = 15, frameSize = (width, height))
 
-        	suc = vid.open(filename = os.path.join(cfg.userPath,cfg.userFolder, 'CamView.avi'), fourcc = cv2.cv.CV_FOURCC(*'XVID'), fps = 30, frameSize = (width, height))
+        # print "Recording {}".format(cfg.recording)
 
+		# start = datetime.now()
 		while(cfg.recording):
 			_, image = cap.read()
+			# delt = datetime.now()-start
+			# # print image.shape
+			# print "----"
+			# print delt.microseconds
+			# print "FPS: {}".format(1/(delt.microseconds / 1E6))
+			# print "----"
+			start = datetime.now()
 			if showVar.get():
+				# print image.shape
 				cv2.imshow("Webcam View", image)
 			if recVar.get():
 				vid.write(image)
-			time.sleep(0.011)
-			# cv2.waitKey(33)
+			# time.sleep(0.011)
+			cv2.waitKey(33)
 		# vid.close()
+
 		cap.release()
 		cv2.destroyWindow("Webcam View")
 
 
 	# debug printing TODO: dummy out, and set spoof to False
-	print "RECORDING NOW AT"
-	print time.localtime()
+	# print "RECORDING NOW AT"
+	# print time.localtime()
 	uno.join()
 	mega.join()
-	# web.join()
-	print "FINISHING RECORDING"
-	print time.localtime()
+	# print "FINISHING RECORDING"
+	# print time.localtime()
 	cameraInstructions(choice = 0)
 	return
 '''File prompts for video files to be processed
@@ -281,10 +294,12 @@ def cameraInstructions(choice = 0):
 	def continueProcess2():
 		# TODO: check option choice, and based on that decide to process alone or correlate with ground truth
 		if os.path.isfile(sidePath.get()) and os.path.isfile(ohpath.get()):
-			cfg.userHeights = img.sideProcess(sidePath.get())
-			cfg.userAngles = img.ohProcess(ohPath.get())
+
 			shutil.copy2(sidePath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'sideView.avi'))
 			shutil.copy2(ohPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'overheadView.avi'))
+			tkMessageBox.showinfo("Video copying completed", "Will now process the videos. This could take a while")
+			cfg.userHeights = img.sideProcess(sidePath.get())
+			cfg.userAngles = img.ohProcess(ohPath.get())
 			# shutil.copy2(frontPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'frontView.avi'))
 			# create analysis images, and go to screen to present them- maybe have message box saying where everything is saved
 			perf.wholeShebang(alone = False)
@@ -298,7 +313,17 @@ def cameraInstructions(choice = 0):
 		showResults(compared = False)
 	
 	def skipProcess2():
-		tkMessageBox.showinfo("Video Selection Skipped", "Will show just the sensor data")
+
+		copied = False
+		if os.path.isfile(sidePath.get()):
+			shutil.copy2(sidePath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'sideView.avi'))
+		if os.path.isfile(ohPath.get()):
+			shutil.copy2(ohPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'overheadView.avi'))
+		if copied:
+			tkMessageBox.showinfo("Videos Copied", "You selected video files anyway, so we will copy them in and just not analyze for now")
+		else:
+			tkMessageBox.showinfo("Video Selection Skipped", "Will show just the sensor data")
+
 		showResults(compared = True)		
 	if choice ==0:
 		nextButton = Tkinter.Button(camFrame, text = "Continue", command = continueProcess0).grid(row =3, column =5)
@@ -377,7 +402,6 @@ def option1():
 
 
 def option1_start():
-	#TODO ALL THIS SHIT
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, 'data.mat')):
 		cfg.loadUserData()
 	else:
@@ -389,6 +413,7 @@ def option1_start():
 		tkMessageBox.showinfo('ERROR', 'No data.mat file found in GT folder')
 		return	
 	# check if there are images first, so we dont have to run video processing again
+	
 	perf.wholeShebang()	
 	showResults()
 	
@@ -442,8 +467,12 @@ def option2():
 	unoBox.bind('<<ListboxSelect>>', unoSelect)
 	megaBox.bind('<<ListboxSelect>>', megaSelect)
 
+
+	recCheck = Tkinter.Checkbutton(frame2, text = "Record With Webcam", variable = recVar)
+	showCheck = Tkinter.Checkbutton(frame2, text = "Show Webcam View While Playing", variable = showVar)
+	recCheck.grid(row = 0, column = 3)
+	showCheck.grid(row = 1, column = 3)
 	homeButton = Tkinter.Button(frame2, text = "Back", command = viewInit).grid(row = 0, column = 5)
-	# TODO: reset fields function outside of this loop?
 	resetButton = Tkinter.Button(frame2, text = "Reset", command = reset).grid(row = 1, column = 5)
 	
 	startButton = Tkinter.Button(frame2, text = "START", command = option2_start, bg = 'GREEN').grid(row = 2, column = 5)
@@ -478,6 +507,31 @@ def option2_start():
 	# debug printing TODO: dummy out, and set spoof to False
 	print "RECORDING NOW AT"
 	print time.localtime()
+	if showVar.get() or recVar.get():
+		cap = cv2.VideoCapture(0)
+		# first read to get the size
+		_, image = cap.read()
+		# print cap.get(cv2.cv.CV_CAP_PROP_FPS)
+		if recVar.get() == 1:
+			height, width, _ = image.shape
+			vid = cv2.VideoWriter()
+			suc = vid.open(filename = os.path.join(cfg.userPath,cfg.userFolder, 'CamView.avi'), fourcc = cv2.cv.CV_FOURCC(*'XVID'), fps = 15, frameSize = (width, height))
+
+        # print "Recording {}".format(cfg.recording)
+		while(cfg.recording):
+			_, image = cap.read()
+			print image.shape
+			if showVar.get():
+				# print image.shape
+				cv2.imshow("Webcam View", image)
+			if recVar.get():
+				vid.write(image)
+			# time.sleep(0.011)
+			cv2.waitKey(33)
+		# vid.close()
+
+		cap.release()
+		cv2.destroyWindow("Webcam View")
 	uno.join()
 	mega.join()
 	print "FINISHING RECORDING"
@@ -562,7 +616,7 @@ def showResults(compared):
 	qmark = Tkinter.PhotoImage("bin/qmark.png")
 	#the general sheet music style image
 	# TODO: make it scrollable
-	genCanvas = Tkinter.Canvas(resultFrame)
+	genCanvas = Tkinter.Canvas(resultFrame, bg = 'blue')
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif")):
 		genPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif"))
 		genCanvas.create_image(0,0,image= genPic)
@@ -576,13 +630,14 @@ def showResults(compared):
 	genScroll.config(command = genCanvas.xview)
 
 	# locations
-	locCanvas = Tkinter.Canvas(resultFrame)#, width = 400, height = 400)
+	locCanvas = Tkinter.Canvas(resultFrame, bg = 'gray')#, width = 400, height = 400)
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "locations.gif")):
+
 		locPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "locations.gif"))
 		locCanvas.create_image(0,0,image= locPic)
 	else: 
 		# make question mark
-
+		print "HELLO WORLD"
 		locCanvas.create_image(0,0, image = qmark)
 		pass
 	locCanvas.grid(row = 2, column = 0)
@@ -591,7 +646,7 @@ def showResults(compared):
 	locCanvas.config(xscrollcommand = locScroll.set)
 	locScroll.config(command = locCanvas.xview)
 	#heights
-	heightCanvas = Tkinter.Canvas(resultFrame)
+	heightCanvas = Tkinter.Canvas(resultFrame, bg = 'red')
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "heights.gif")):
 		heightPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "heights.gif"))
 		heightCanvas.create_image(0,0,image= heightPic)
@@ -606,7 +661,7 @@ def showResults(compared):
 	heightScroll.config(command = heightCanvas.xview)
 
 	# angles
-	angleCanvas = Tkinter.Canvas(resultFrame)#, width = 400, height = 400)
+	angleCanvas = Tkinter.Canvas(resultFrame, bg = 'green')#, width = 400, height = 400)
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "angles.gif")):
 		anglePic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "angles.gif"))
 		angleCanvas.create_image(0,0,image= anglePic)
