@@ -142,7 +142,7 @@ class unoComm(threading.Thread):
         # TODO: send message that will end video
         if not self.spoof:
             comm.close()
-
+''' I didnt write this, but its really useful '''
 def serial_ports():
     """Lists serial ports
 
