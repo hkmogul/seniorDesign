@@ -34,6 +34,7 @@ duration = Tkinter.IntVar()
 nameFolder = Tkinter.StringVar()
 recVar = Tkinter.IntVar()
 showVar = Tkinter.IntVar()
+skipGrade = Tkinter.IntVar()
 sf2 = Tkinter.StringVar()
 octave = Tkinter.IntVar()
 def quit():
@@ -47,6 +48,7 @@ def reset():
 	nameFolder.set('')
 	recVar.set(0)
 	showVar.set(0)
+	skipGrade.set(0)
 	octave.set(4)
 	readHits.octave = 4
 
@@ -215,10 +217,11 @@ def option0_start():
 			# delt = datetime.now()-start
 			# # print image.shape
 			# print "----"
+
 			# print delt.microseconds
 			# print "FPS: {}".format(1/(delt.microseconds / 1E6))
 			# print "----"
-			start = datetime.now()
+			# start = datetime.now()
 			if showVar.get():
 				# print image.shape
 				cv2.imshow("Webcam View", image)
@@ -363,6 +366,8 @@ def option1():
 	#TODO: label/entry/button for path for gt and user paths
 	# then run same functions as option2 after recording?
 	user = Tkinter.StringVar()
+	user.set(' ')
+	gtpath.set(' ')
 	def setGTPath():
 		gtpath.set(tkFileDialog.askdirectory(parent = root))
 		cfg.gtPath = gtpath.get()
@@ -383,23 +388,35 @@ def option1():
 	gtLabel = Tkinter.Label(frame1, text = "Name of Example/Folder")
 	gtLabel.grid(row = 0,column = 0)
 	userLabel.grid(row = 1, column = 0)
-	name = Tkinter.Label(frame1, textvariable = user)
+	name = Tkinter.Label(frame1, textvariable = user,relief = Tkinter.SUNKEN, width = 50)
 	name.grid(row = 1, column =1)
-	gt = Tkinter.Label(frame1, textvariable = gtpath)
+	gt = Tkinter.Label(frame1, textvariable = gtpath, relief = Tkinter.SUNKEN, width = 50)
 	gt.grid( row = 0, column = 1)
 	userButton = Tkinter.Button(frame1, text = '...', command = setUserPathFold)
 	userButton.grid(row =1, column = 2)
 	gtButton = Tkinter.Button(frame1, text = '...', command = setGTPath)
 	gtButton.grid(row = 0, column =2)
 
+	# checkbutton for skipping ground truth
+	def toggleSkip():
+		if skipGrade.get():
+			# make the ground truth things have no state
+			gtButton.config(state = Tkinter.DISABLED)
+			gtpath.set('--------')
 
-	
+		else:
+			gtButton.config(state=Tkinter.NORMAL)
+			gtpath.set('')
+	skipGT = Tkinter.Checkbutton(frame1, text = "Skip Ground Truth Analysis ", variable = skipGrade, command = toggleSkip)
+	skipGT.grid(row = 0, column = 5)
+
+
 	backButton = Tkinter.Button(frame1, text = "BACK", command = viewInit)
 	startButton = Tkinter.Button(frame1, text = "START", command = option1_start)
 	backButton.grid(row = 0, column = 10)
 	startButton.grid(row = 1, column = 10)
 
-
+	padWidgets(frame1)
 
 def option1_start():
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, 'data.mat')):
@@ -407,14 +424,14 @@ def option1_start():
 	else:
 		tkMessageBox.showinfo('ERROR', 'No data.mat file found in user folder')
 		return
-	if os.path.isfile(os.path.join(cfg.gtPath, 'data.mat')):
+	if os.path.isfile(os.path.join(cfg.gtPath, 'data.mat')) and not skipGT.get():
 		cfg.loadGT()
 	else:
 		tkMessageBox.showinfo('ERROR', 'No data.mat file found in GT folder')
 		return	
-	# check if there are images first, so we dont have to run video processing again
-	
-	perf.wholeShebang()	
+	# check if there is data first, so we dont have to run video processing again
+
+	perf.wholeShebang(alone = skipGT.get())	
 	showResults()
 	
 
@@ -575,6 +592,7 @@ def FUN():
 	sf2Button = Tkinter.Button(funFrame, text = "...", command = pickSF2).grid(row = 3, column = 1)
 	startButton = Tkinter.Button(funFrame, text = "To Play Space", command = startFun).grid(row = 0, column = 3)
 	backButton = Tkinter.Button(funFrame, text = "BACK", command = viewInit).grid(row = 1, column = 3)
+
 	# print "AWWW YEEAAAHHHH"
 
 ''' has start/stop threads, hopefully someday add changing octaves/instruments '''
@@ -592,7 +610,9 @@ def synthMode():
 		synth.start()
 	def stopThread():
 		cfg.playing = False
-		synth.join()
+		# print threading.enumerate()
+		if "SynthComm" in threading.enumerate():
+			synth.join()
 		FUN()
 	def setOctave():
 		readHits.octave= octave.get()
