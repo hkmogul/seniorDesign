@@ -34,8 +34,8 @@ void loop()
         character = Serial.read();
         content.concat(character);
       }
-      // check if this turns on the cameras- S for START
-      if(content.length() > 0 && content.charAt(0) == 'S' && state == 0){
+      // check if this turns on the cameras-
+      if(content.length() > 0 && content.charAt(0) == 'W' && state == 0){
         // parse tempo from 
         state = 1;
         tempo = content.substring(1).toInt();
@@ -43,15 +43,24 @@ void loop()
         delay(200);
         analogWrite(gate, 0);
         content ="";
+        if(state==1){
+          state = 0;
+          digitalWrite(ledPin, LOW);
+        }
+        else {
+          state = 1;
+          digitalWrite(ledPin, HIGH);
+        }
       }
-      //check if we're turning off the camera- T for TERMINATE
-      else if(content.length() > 0 && content.charAt(0) == 'T' && state == 1){
-        state = 0;
-        analogWrite(gate, 255);
-        delay(200);
-        analogWrite(gate, 0);
-        content = "";
-      }
+//      //check if we're turning off the camera- T for TERMINATE
+//      else if(content.length() > 0 && content.charAt(0) == 'T' && state == 1){
+//        state = 0;
+//        analogWrite(gate, 255);
+//        delay(200);
+//        analogWrite(gate, 0);
+//        content = "";
+//        digitalWrite(ledPin, LOW);
+//      }
       // else, this is a garbage message and we should ignore it and reset
       else{
         content = "";
@@ -59,7 +68,7 @@ void loop()
       // metronome control
       if (state == 1){
         // time in seconds % tempo == 0 means flash
-        if( (int(millis()*1000) % tempo) == 0){
+        if( (millis() % tempo/60) == 0){
           digitalWrite(ledPin, HIGH);
           delay(10); // so it doesnt immediately turn off 
         }

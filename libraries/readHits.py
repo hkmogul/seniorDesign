@@ -135,12 +135,19 @@ class unoComm(threading.Thread):
         config.recording = True
     def run(self):
         if not self.spoof:
-            comm = serial(config.unoPath, config.unoBaud, timeout = 0)
+            print "HELLO WORLD I AM HERE"
+            print "GOING TO PRINT"
+            print "W{0}".format(config.tempo)
+            comm = serial.Serial(config.unoPath, config.unoBaud, timeout = 0)
+            comm.write("W{0}\n".format(config.tempo))
         # TODO: send message that will start video, add tempo message
         time.sleep(config.duration)
         config.recording = False
+
         # TODO: send message that will end video
         if not self.spoof:
+            print "STOPPING RECORDING"
+            comm.write("W{0}\n".format(config.tempo))
             comm.close()
 ''' I didnt write this, but its really useful '''
 def serial_ports():
@@ -159,7 +166,7 @@ def serial_ports():
         ports = glob.glob('/dev/tty[A-Za-z]*')
 
     elif sys.platform.startswith('darwin'):
-        ports = glob.glob('/dev/tty.*')
+        ports = glob.glob('/dev/tty.usb*')
 
     else:
         raise EnvironmentError('Unsupported platform')
@@ -167,8 +174,8 @@ def serial_ports():
     result = []
     for port in ports:
         try:
-            s = serial.Serial(port)
-            s.close()
+            # s = serial.Serial(port)
+            # s.close()
             result.append(port)
         except (OSError, serial.SerialException):
             pass
