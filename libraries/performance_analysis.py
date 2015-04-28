@@ -4,6 +4,10 @@ import os
 import config as cfg 
 import matplotlib.figure as fig
 import math
+import sys
+
+sys.path.append('libraries')
+import imageFunctions as img
 # analysis functions for analyzing the output of
 
 ''' Utility for turning raw data into signal stream (default resolution = 1ms)
@@ -175,22 +179,47 @@ def pltAngles(userdata, gt= None, debug = False):
         plt.savefig(os.path.join(cfg.userpath, 'angles.gif'))
     return
 
+''' faster inline function for checking empty hit array '''
+def empty(mat):
+    return mat.shape[1] is 0
 
 ''' Does all images using global files
     alone = True if not compared to GT
  '''
 def wholeShebang(alone):
     if alone:
-        pltGeneral(cfg.userHits)
-        pltHeights(cfg.userHeights)
-        pltAngles(cfg.userAngles)
-        pltLocations(cfg.userHits)
+        if not empty(cfg.userHits):
+            pltGeneral(cfg.userHits)
+            pltLocations(cfg.userHits)
+        # check if matrices are empty.  if theyre not, just have to make the images
+        if not empty(cfg.userHeights):
+            pltHeights(cfg.userHeights)
+        elif os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, 'sideView.avi')):
+            img.sideProcess(os.path.join(cfg.userPath, cfg.userFolder, 'sideView.avi'))
+            pltHeights(cfg.userHeights)
+
+        if not empty(cfg.userAngles):
+            pltAngles(cfg.userAngles)
+        elif os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, 'overheadView.avi')):
+            img.ohProcess(os.path.join(cfg.userPath, cfg.userFolder, 'overheadView.avi'))
+            pltAngles(cfg.userAngles)
+
     else:
-        cfg.error, cfg.extra = perf.gradeRef(cfg.groundTruth, cfg.userHits)
-        pltGeneral(cfg.userHits, cfg.groundTruth)
-        pltHeights(cfg.userHeights, cfg.gtHeights)
-        pltAngles(cfg.userAngles, cfg.gtAngles)
-        pltLocations(cfg.userHits, cfg.groundTruth)       
+        if not empty(cfg.groundTruth) and not empty(cfg.userHits):
+            cfg.error, cfg.extra = perf.gradeRef(cfg.groundTruth, cfg.userHits)
+            pltGeneral(cfg.userHits, cfg.groundTruth)
+            pltLocations(cfg.userHits, cfg.groundTruth)
+        if not empty(cfg.gtHeights) and not empty(cfg.userHeights):
+            pltHeights(cfg.userHeights, cfg.gtHeights)
+        elif os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, 'sideView.avi')) and not empty(cfg.gtHeights):
+            img.sideProcess(os.path.join(cfg.userPath, cfg.userFolder, 'sideView.avi'))
+            pltHeights(cfg.userHeights, cfg.gtHeights)
+        if not empty(cfg.gtAngles, cfg.userAngles):
+            pltAngles(cfg.userAngles, cfg.gtAngles)
+        elif os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, 'overheadView.avi')) and not empty(cfg.gtAngles):
+            img.ohProcess(os.path.join(cfg.userPath, cfg.userFolder, 'overheadView.avi'))
+            pltAngles(cfg.userAngles, cfg.gtAngles)
+       
 
 
 ''' better "where" function for finding actual locations
