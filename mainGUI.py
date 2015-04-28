@@ -118,19 +118,19 @@ def option0():
 	# print type(megaScroll)
 	serialList = readHits.serial_ports()
 	unoLabel = Tkinter.Label(frame0, text = "Address of UNO (Camera Controller)").grid(row = 8, column = 0)
-	unoBox = Tkinter.Listbox(frame0, selectmode = Tkinter.SINGLE)
+	unoBox = Tkinter.Listbox(frame0, selectmode = Tkinter.SINGLE, width = 75)
 	for address in serialList:
 		unoBox.insert(Tkinter.END, address)
 	megaLabel = Tkinter.Label(frame0, text = "Address of Mega (Sensor Reader)").grid(row = 9, column = 0)
-	megaBox = Tkinter.Listbox(frame0, selectmode = Tkinter.SINGLE)
+	megaBox = Tkinter.Listbox(frame0, selectmode = Tkinter.SINGLE, width = 75)
 	for address in serialList:
 		megaBox.insert(Tkinter.END, address)
-	unoBox.grid(row = 8, column = 1)
-	megaBox.grid(row = 10, column = 1)
+	unoBox.grid(row = 8, column = 3)
+	megaBox.grid(row = 10, column = 3)
 	megaScroll = Tkinter.Scrollbar(frame0, orient = Tkinter.HORIZONTAL)
-	megaScroll.grid(row = 11, column =1, sticky = Tkinter.E+ Tkinter.W)
+	megaScroll.grid(row = 11, column =3, sticky = Tkinter.E+ Tkinter.W)
 	unoScroll = Tkinter.Scrollbar(frame0, orient = Tkinter.HORIZONTAL)
-	unoScroll.grid(row = 9, column = 1, sticky = Tkinter.E+ Tkinter.W)
+	unoScroll.grid(row = 9, column = 3, sticky = Tkinter.E+ Tkinter.W)
 	megaBox.config(xscrollcommand = megaScroll.set)
 	megaScroll.config(command = megaBox.xview)
 	unoBox.config(xscrollcommand = unoScroll.set)
@@ -141,8 +141,6 @@ def option0():
 		cfg.megaPath = megaBox.get(megaBox.curselection())
 	unoBox.bind('<<ListboxSelect>>', unoSelect)
 	megaBox.bind('<<ListboxSelect>>', megaSelect)
-
-
 
 	# checkboxes for if webcam is being used in this session
 	recCheck = Tkinter.Checkbutton(frame0, text = "Record With Webcam", variable = recVar)
@@ -159,7 +157,7 @@ def option0():
 	return
 ''' lets see if this fixes GUI issue '''
 def option0_preStart():
-	#TODO: function to pick up/set all appropriate values
+
 	# check if os join of path and name folder exists, and if it does, return a message box
 	if os.path.isdir(os.path.join(cfg.userPath, nameFolder.get())):
 
@@ -183,14 +181,8 @@ def option0_start():
 	cfg.userFolder = nameFolder.get()
 	os.mkdir(os.path.join(cfg.userPath, cfg.userFolder))
 
-	# maybe make a thing that flashes based on tempo in recording adjustment thread? if tempo is set, that is
-
-
-	#time.sleep(0.1)
-
 	mega = readHits.megaComm(1, "MegaComm", spoof = True)
-	uno = readHits.unoComm(2, "UnoComm", spoof = True)
-	# web = img.webCam(3, "Webcam", saving = recVar.get(), showing = showVar.get())
+	uno = readHits.unoComm(2, "UnoComm", spoof = False)
 
 	uno.start()
 	time.sleep(.0001)
@@ -207,21 +199,14 @@ def option0_start():
 		if recVar.get() == 1:
 			height, width, _ = image.shape
 			vid = cv2.VideoWriter()
-			suc = vid.open(filename = os.path.join(cfg.userPath,cfg.userFolder, 'CamView.avi'), fourcc = cv2.cv.CV_FOURCC(*'XVID'), fps = 15, frameSize = (width, height))
+			suc = vid.open(filename = os.path.join(cfg.userPath,cfg.userFolder, 'CamView.avi'), fourcc = cv2.cv.CV_FOURCC(*'XVID'), fps = 13, frameSize = (width, height))
 
         # print "Recording {}".format(cfg.recording)
 
 		# start = datetime.now()
 		while(cfg.recording):
 			_, image = cap.read()
-			# delt = datetime.now()-start
-			# # print image.shape
-			# print "----"
 
-			# print delt.microseconds
-			# print "FPS: {}".format(1/(delt.microseconds / 1E6))
-			# print "----"
-			# start = datetime.now()
 			if showVar.get():
 				# print image.shape
 				cv2.imshow("Webcam View", image)
@@ -610,7 +595,7 @@ def synthMode():
 		synth.start()
 	def stopThread():
 		cfg.playing = False
-		# print threading.enumerate()
+		# check if the synth serial communication was started
 		if "SynthComm" in threading.enumerate():
 			synth.join()
 		FUN()
