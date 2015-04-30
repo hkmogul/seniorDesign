@@ -13,6 +13,10 @@ void setup()
 {
   Serial.begin(9600);
   pinMode(gate, OUTPUT);
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
+  analogWrite(gate, 0);
+  state = 0;
 }
 
 void loop()
@@ -34,23 +38,25 @@ void loop()
         character = Serial.read();
         content.concat(character);
       }
+      Serial.flush();
       // check if this turns on the cameras-
-      if(content.length() > 0 && content.charAt(0) == 'W' && state == 0){
+      if(content.length() > 0 && content.charAt(0) == 'W'){
         // parse tempo from 
-        state = 1;
+//        state = 1;
         tempo = content.substring(1).toInt();
         analogWrite(gate, 255);
         delay(200);
         analogWrite(gate, 0);
         content ="";
-        if(state==1){
-          state = 0;
-          digitalWrite(ledPin, LOW);
-        }
-        else {
-          state = 1;
-          digitalWrite(ledPin, HIGH);
-        }
+//        if(state==1){
+//          state = 0;
+//          digitalWrite(ledPin, LOW);
+//        }
+//        else {
+//          state = 1;
+//          digitalWrite(ledPin, HIGH);
+//          delay(500);
+//        }
       }
 //      //check if we're turning off the camera- T for TERMINATE
 //      else if(content.length() > 0 && content.charAt(0) == 'T' && state == 1){

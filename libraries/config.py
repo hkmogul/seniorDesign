@@ -98,10 +98,17 @@ def loadUserData():
         userHits = mat_contents['hits']
         tempo = mat_contents['tempo']
         duration = mat_contents['duration']
+        if 'error' in mat_contents:
+            error = mat_contents['error']
+            extra = mat_contents['extra']
 
 def saveData():
     name = os.path.join(userPath, userFolder, 'data.mat')
-    m_dict = {'heights': userHeights, 'angles': userAngles, 'hits': userHits, 'tempo': tempo, 'duration': duration}
+    if extra.shape[1] is not 0 and error.shape[1] is not 0:
+        m_dict = {'heights': userHeights, 'angles': userAngles, 'hits': userHits, 'tempo': tempo, 'duration': duration, 'extra': extra, 'error': error}
+    else:
+        m_dict = {'heights': userHeights, 'angles': userAngles, 'hits': userHits, 'tempo': tempo, 'duration': duration}
+
     scipy.io.savemat(name, m_dict)
 def setUserPath(name):
     userPath = name
@@ -143,6 +150,9 @@ def resetAll():
     gtHeights = np.empty((3,0))
 
     gtAngles = np.empty((2,0))
+
+    extra = np.empty((4,0))
+    error = np.empty((4,0))
     '''color settings (HSV)'''
     # lower and upper bounds for tip of Right stick
     tipR_lower = np.array([85,140,175])

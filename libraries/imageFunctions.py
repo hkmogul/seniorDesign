@@ -7,6 +7,7 @@ import config
 import os
 import threading
 import time
+import sys
 
 ''' check if number is undefined '''
 def isNan(num):
@@ -117,16 +118,20 @@ def sideProcess(vidPath, fs = 120):
 
         heights = np.hstack((heights, np.array([[timestep*fc],[hL],[hR]])))
         fc = fc+1
+        if '-d' in sys.argv:
+            cv2.imshow('SideView', image)
         cv2.waitKey(1)
+    if '-d' in sys.argv:
+        cv2.destroyWindow('SideView')
 
     return heights
 
 ''' return numpy arrays of stick angle and possibly finer positions for tips '''
-def ohProcess(vidPath, fs = 120, finePos = False):
+def ohProcess(vidPath, fs = 120):
     cap = cv2.VideoCapture(vidPath)
     angles = np.empty((2,0))
-    fc = 0
-    timestep = (1/fs)*1000
+    fc = 0 # frame count
+    timestep = (1/fs)*1000 #time difference per frame, based on fps
     while cap.isOpened():
         ret, image = cap.read()
         if ret is False:
