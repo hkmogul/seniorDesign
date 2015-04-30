@@ -4,7 +4,7 @@
 
 import numpy as np
 import time
-import datetime
+# import datetime
 import serial
 import threading
 import glob
@@ -54,8 +54,8 @@ def openComm(notStore= True):
         while config.recording:
             info = ser.readline()
             if info is not '':
-                time, x, y, vel = parseInput(timeStart, info)
-                newHit = np.array([[time], [vel], [x], [y]])
+                timeElp, x, y, vel = parseInput(timeStart, info)
+                newHit = np.array([[timeElp], [vel], [x], [y]])
                 config.userHits = np.hstack((config.userHits, newHit))
     # when done, close out connection
     ser.close()
@@ -125,7 +125,7 @@ class megaComm(threading.Thread):
         self.spoof = spoof
     def run(self):
         if not self.spoof:
-            openComm(notStore = notStore)
+            openComm(notStore = self.notStore)
 class unoComm(threading.Thread):
     def __init__(self, threadID, name, spoof = False):
         threading.Thread.__init__(self)
@@ -166,7 +166,7 @@ def serial_ports():
         ports = glob.glob('/dev/tty[A-Za-z]*')
 
     elif sys.platform.startswith('darwin'):
-        ports = glob.glob('/dev/tty.usb*')
+        ports = glob.glob('/dev/tty.*')
 
     else:
         raise EnvironmentError('Unsupported platform')
@@ -174,6 +174,8 @@ def serial_ports():
     result = []
     for port in ports:
         try:
+            # if "Bluetooth" in port:
+            #     continue
             # s = serial.Serial(port)
             # s.close()
             result.append(port)
