@@ -15,7 +15,7 @@ import threading
 import time
 import shutil
 
-# from datetime import datetime
+from datetime import datetime
 
 sys.path.append("libraries")
 # self made libraries
@@ -23,6 +23,11 @@ import readHits
 import imageFunctions as img
 import performance_analysis as perf
 import config as cfg
+
+debug = False
+if '-d' in sys.argv:
+	debug = True
+
 
 root= Tkinter.Tk()
 root.title("Drum Trainer")
@@ -91,7 +96,7 @@ def option0():
 	nameLabel = Tkinter.Label(frame0, text = "Name of Example/Folder")
 	nameLabel.grid(row = 0,column = 0)
 
-	nameEntry = Tkinter.Entry(frame0, textvariable = nameFolder)
+	nameEntry = Tkinter.Entry(frame0, textvariable = nameFolder, width = 75)
 	nameEntry.grid(row = 1,column = 0)
 
 
@@ -99,7 +104,7 @@ def option0():
 	pathLabel = Tkinter.Label(frame0, text = "Path for Example to be saved")
 	pathLabel.grid(row = 2, column = 0)
 	userpath.set(cfg.userPath)
-	pathShow = Tkinter.Label(frame0, textvariable = userpath, relief = Tkinter.SUNKEN)
+	pathShow = Tkinter.Label(frame0, textvariable = userpath, relief = Tkinter.SUNKEN, width = 75)
 	pathShow.grid(row = 3, column = 0)
 
 	pathButton = Tkinter.Button(frame0, text = "...", command = pathOpen)
@@ -115,9 +120,14 @@ def option0():
 
 
 	# arduino selection boxes
-	# print type(megaScroll)
 	serialList = readHits.serial_ports()
-	unoLabel = Tkinter.Label(frame0, text = "Address of UNO (Camera Controller)").grid(row = 8, column = 0)
+	tempty = []
+	# if serialList == tempty and not debug:
+	# 	tkMessageBox.showinfo('ERROR', 'No serial ports found!')
+	# 	clearOut(root)
+	# 	viewInit()
+	unoLabel = Tkinter.Label(frame0, text = "Address of UNO (Camera Controller)")
+	unoLabel.grid(row = 8, column = 0)
 	unoBox = Tkinter.Listbox(frame0, selectmode = Tkinter.SINGLE, width = 75)
 	for address in serialList:
 		unoBox.insert(Tkinter.END, address)
@@ -169,24 +179,45 @@ def option0_preStart():
 		return
 	else:
 		clearOut(root)
-		frame0A = Tkinter.Frame(root)
-		frame0A.grid()
-		nowRecording = Tkinter.Label(frame0A, text = "NOW RECORDING", bg = 'GREEN')
-		nowRecording.grid()
+		frameC = Tkinter.Frame(root)
+		frameC.grid()
+		countLabel = Tkinter.Label(frameC, text = 3, bg = 'YELLOW', font = ('Helvetica', 72))
+		countLabel.grid()
+		# option0_start()
+		countdown(3, countLabel)
+
+# count = 3
+def countdown(count, label):
+
+	if count <0:
 		option0_start()
-
+	else:
+		if count is 0:
+			label.configure(bg = 'GREEN')
+		label.configure(text = count)
+		count = count-1
+		root.after(1000, countdown, count, label)
+		# countdown(count, label)
 def option0_start():
-
+	clearOut(root)
+	frame0A = Tkinter.Frame(root)
+	frame0A.grid()
+	nowRecording = Tkinter.Label(frame0A, text = "FINISHED RECORDING", bg = 'YELLOW', font = ('Helvetica', 72))
+	nowRecording.grid()
 
 	cfg.userFolder = nameFolder.get()
 	os.mkdir(os.path.join(cfg.userPath, cfg.userFolder))
 
-	mega = readHits.megaComm(1, "MegaComm", spoof = True)
-	uno = readHits.unoComm(2, "UnoComm", spoof = False)
+	if debug:
+		mega = readHits.megaComm(1, "MegaComm", spoof = True)
+		uno = readHits.unoComm(2, "UnoComm", spoof = True)
+	else:
+		mega = readHits.megaComm(1, "MegaComm", spoof = False)
+		uno = readHits.unoComm(2, "UnoComm", spoof = False)
 
 	uno.start()
-	time.sleep(.0001)
-
+	# time.sleep(.0001)
+	root.after(10)
 	# web.start()
 	mega.start()
 	# run opencv vidcapture in main thread
@@ -195,15 +226,20 @@ def option0_start():
 		cap = cv2.VideoCapture(0)
 		# first read to get the size
 		_, image = cap.read()
+		tStart = datetime.now()
 		# print cap.get(cv2.cv.CV_CAP_PROP_FPS)
+		cv2.waitKey(33)
+		_, image = cap.read()
+		timeElp = (datetime.now()-tStart).microseconds
+		frameRate = 1/(4*timeElp/1e6)
+		# print "TIME BETWEEN FRAMES IS {}".format(timeElp/1e6)
+		# print "SUGGESTED FPS = {}".format(frameRate)
 		if recVar.get() == 1:
 			height, width, _ = image.shape
 			vid = cv2.VideoWriter()
-			suc = vid.open(filename = os.path.join(cfg.userPath,cfg.userFolder, 'CamView.avi'), fourcc = cv2.cv.CV_FOURCC(*'XVID'), fps = 13, frameSize = (width, height))
+			suc = vid.open(filename = os.path.join(cfg.userPath,cfg.userFolder, 'CamView.avi'), fourcc = cv2.cv.CV_FOURCC(*'DIVX'), fps = frameRate, frameSize = (width, height))
 
-        # print "Recording {}".format(cfg.recording)
 
-		# start = datetime.now()
 		while(cfg.recording):
 			_, image = cap.read()
 
@@ -213,7 +249,7 @@ def option0_start():
 			if recVar.get():
 				vid.write(image)
 			# time.sleep(0.011)
-			cv2.waitKey(33)
+			cv2.waitKey(1)
 		# vid.close()
 
 		cap.release()
@@ -299,14 +335,26 @@ def cameraInstructions(choice = 0):
 	def skipProcess0():
 		tkMessageBox.showinfo("Video Selection Skipped", "Will show just the sensor data")
 		showResults(compared = False)
-	
+		copied = False
+		if os.path.isfile(sidePath.get()):
+			shutil.copy2(sidePath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'sideView.avi'))
+			copied = True
+		if os.path.isfile(ohPath.get()):
+			shutil.copy2(ohPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'overheadView.avi'))
+			copied = True
+		if copied:
+			tkMessageBox.showinfo("Videos Copied", "You selected video files anyway, so we will copy them in and just not analyze for now")
+		else:
+			tkMessageBox.showinfo("Video Selection Skipped", "Will show just the sensor data")
 	def skipProcess2():
 
 		copied = False
 		if os.path.isfile(sidePath.get()):
 			shutil.copy2(sidePath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'sideView.avi'))
+			copied = True
 		if os.path.isfile(ohPath.get()):
 			shutil.copy2(ohPath.get(), os.path.join(cfg.userPath, cfg.userFolder, 'overheadView.avi'))
+			copied = True
 		if copied:
 			tkMessageBox.showinfo("Videos Copied", "You selected video files anyway, so we will copy them in and just not analyze for now")
 		else:
@@ -477,28 +525,57 @@ def option2():
 	homeButton = Tkinter.Button(frame2, text = "Back", command = viewInit).grid(row = 0, column = 5)
 	resetButton = Tkinter.Button(frame2, text = "Reset", command = reset).grid(row = 1, column = 5)
 	
-	startButton = Tkinter.Button(frame2, text = "START", command = option2_start, bg = 'GREEN').grid(row = 2, column = 5)
+	startButton = Tkinter.Button(frame2, text = "START", command = option2_preStart, bg = 'GREEN').grid(row = 2, column = 5)
 	
 
 
 	padWidgets(frame2)
-# open connections with arduino, then move on to find video files
-def option2_start():
-	#TODO: function to pick up/set all appropriate values
+def option2_preStart():
 	# check if os join of path and name folder exists, and if it does, return a message box
 	if os.path.isdir(os.path.join(cfg.userPath, nameFolder.get())):
+
 		tkMessageBox.showinfo("ERROR", "Folder already exists! Pick another")
 		return
 	# check for empty strings
 	elif len(nameFolder.get()) ==0  or duration.get() is None or len(userpath.get()) == 0 or cfg.unoPath is '' or cfg.megaPath is '' or cfg.megaPath is cfg.unoPath:
 		tkMessageBox.showinfo("ERROR", "Missing data, please fill in everything")
 		return
+	else:
+		clearOut(root)
+		frameC = Tkinter.Frame(root)
+		frameC.grid()
+		countLabel = Tkinter.Label(frameC, text = 3, bg = 'YELLOW', font = ('Helvetica', 72))
+		countLabel.grid()
+		# option0_start()
+		countdown2(3, countLabel)
+# open connections with arduino, then move on to find video files
+def countdown2(count, label):
+
+	if count <0:
+		option2_start()
+	else:
+		if count is 0:
+			label.configure(bg = 'GREEN')
+		label.configure(text = count)
+		count = count-1
+		root.after(1000, countdown, count, label)
+
+def option2_start():
+	#TODO: function to pick up/set all appropriate values
+	# check if os join of path and name folder exists, and if it does, return a message box
+	# if os.path.isdir(os.path.join(cfg.userPath, nameFolder.get())):
+	# 	tkMessageBox.showinfo("ERROR", "Folder already exists! Pick another")
+	# 	return
+	# # check for empty strings
+	# elif len(nameFolder.get()) ==0  or duration.get() is None or len(userpath.get()) == 0 or cfg.unoPath is '' or cfg.megaPath is '' or cfg.megaPath is cfg.unoPath:
+	# 	tkMessageBox.showinfo("ERROR", "Missing data, please fill in everything")
+	# 	return
 	cfg.userFolder = nameFolder.get()
 	os.mkdir(os.path.join(cfg.userPath, cfg.userFolder))
 	clearOut(root)
 	frame0A = Tkinter.Frame(root).grid()
 	# maybe make a thing that flashes based on tempo in recording adjustment thread? if tempo is set, that is
-	nowRecording = Tkinter.Label(frame0A, text = "NOW RECORDING", bg = 'GREEN').grid()
+	nowRecording = Tkinter.Label(frame0A, text = "FINISHED RECORDING", bg = 'YELLOW', font = ('Helvetica', 72)).grid()
 
 	#time.sleep(0.1)
 	mega = readHits.megaComm(1, "MegaComm", spoof = True)
