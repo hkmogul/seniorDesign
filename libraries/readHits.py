@@ -4,7 +4,7 @@
 
 import numpy as np
 import time
-# import datetime
+from datetime import datetime
 import serial
 import threading
 import glob
@@ -69,17 +69,14 @@ def pos2Num(x,y):
     else:
         return x+7
 def synthComm():
-    # print config.megaPath
-    # print config.megaBaud
+
     timeStart = time.time()
     fluidsynth.init(config.sf2Path)
-    # print config.sf2Path
-    # print timeStart
+
     note = Note()
     ser = serial.Serial(config.megaPath, config.megaBaud,timeout = 1)
-    # print "HELLO HILARY I AM HERE"
-    # code for print and parse goes here
-    while config.playing:
+
+    while config.playing and '-d' in sys.argv:
         info = ser.readline()
         if info is not '' and len(info) == 9:
             # print info
@@ -135,19 +132,41 @@ class unoComm(threading.Thread):
         config.recording = True
     def run(self):
         if not self.spoof:
-            print "HELLO WORLD I AM HERE"
-            print "GOING TO PRINT"
-            print "W{0}".format(config.tempo)
-            comm = serial.Serial(config.unoPath, config.unoBaud, timeout = 0)
-            comm.write("W{0}\n".format(config.tempo))
-        # TODO: send message that will start video, add tempo message
-        time.sleep(config.duration)
+            # print "GOING TO PRINT"
+            interval = int(60E3/config.tempo)
+            # print "W{0}".format(interval)
+
+            time.sleep(0.01) 
+            comm = serial.Serial(config.unoPath, config.unoBaud, timeout = 1)
+            # set up a loop to wait for arduino to reboot
+            temp = None
+            while not temp:
+                temp = comm.readline()
+            # print temp
+            # print comm.name
+            # comm.write("W{0}\n\n".format(interval))
+            # comm.write("{}\n".format(config.tempo))
+            comm.write('W {0} {1}\n'.format(int(interval/255),int(interval%255)))
+            # comm.write("{}\n".format(int(interval/255)))
+            # comm.write("{}\n".format(int(interval%255)))
+            tStart = time.time()
+            timeElp = time.time()- tStart
+            while(timeElp <= config.duration):
+                timeElp = time.time() -tStart
+                # print timeElp
+                info = comm.readline()
+                # print info
+        # time.sleep(config.duration)
         config.recording = False
 
-        # TODO: send message that will end video
         if not self.spoof:
             print "STOPPING RECORDING"
-            comm.write("W{0}\n".format(config.tempo))
+            # comm.write("{0}\n\n".format(interval))
+            # comm.write("{}\n".format(config.tempo))
+            comm.write('W ')
+            # set interval back to 5000 = 19*255 + 255
+            comm.write("{} ".format(19))
+            comm.write("{} \n".format(155))
             comm.close()
 ''' I didnt write this, but its really useful '''
 def serial_ports():

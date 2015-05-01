@@ -584,8 +584,8 @@ def option2_start():
 	time.sleep(.0001)
 	mega.start()
 	# debug printing TODO: dummy out, and set spoof to False
-	print "RECORDING NOW AT"
-	print time.localtime()
+	# print "RECORDING NOW AT"
+	# print time.localtime()
 	if showVar.get() or recVar.get():
 		cap = cv2.VideoCapture(0)
 		# first read to get the size
@@ -613,8 +613,8 @@ def option2_start():
 		cv2.destroyWindow("Webcam View")
 	uno.join()
 	mega.join()
-	print "FINISHING RECORDING"
-	print time.localtime()
+	# print "FINISHING RECORDING"
+	# print time.localtime()
 	cameraInstructions(choice = 2)
 	pass
 
@@ -687,6 +687,85 @@ def synthMode():
 	backButt = Tkinter.Button(synthFrame, text = 'BACK', command = stopThread)
 	backButt.grid(row = 1, column = 0)
 ''' for showing results '''	
+# def showResults(compared):
+# 	# print cfg.userHits.shape
+# 	# generate grid + canvas in each area
+# 	# check that file exists for each, then show
+# 	# if not, show question mark bitmap
+# 	clearOut(root)
+# 	resultFrame = Tkinter.Frame(root)
+# 	resultFrame.grid()
+# 	qmark = Tkinter.PhotoImage("bin/qmark.png")
+# 	#the general sheet music style image
+# 	# TODO: make it scrollable
+# 	genCanvas = Tkinter.Canvas(resultFrame, bg = 'blue')
+# 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif")):
+# 		genPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif"))
+# 		genCanvas.create_image(0,0,image= genPic)
+# 	else: 
+# 		genCanvas.create_image(0,0, image = qmark)
+# 		pass
+# 	genCanvas.grid(row = 0, column = 0)
+# 	genScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
+# 	genScroll.grid(row = 1, column = 0)
+# 	genCanvas.config(xscrollcommand = genScroll.set)
+# 	genScroll.config(command = genCanvas.xview)
+
+# 	# locations
+# 	locCanvas = Tkinter.Canvas(resultFrame, bg = 'gray')#, width = 400, height = 400)
+# 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "locations.gif")):
+
+# 		locPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "locations.gif"))
+# 		locCanvas.create_image(0,0,image= locPic)
+# 	else: 
+# 		# make question mark
+# 		print "HELLO WORLD"
+# 		locCanvas.create_image(0,0, image = qmark)
+# 		pass
+# 	locCanvas.grid(row = 2, column = 0)
+# 	locScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
+# 	locScroll.grid(row = 3, column = 0)
+# 	locCanvas.config(xscrollcommand = locScroll.set)
+# 	locScroll.config(command = locCanvas.xview)
+# 	#heights
+# 	heightCanvas = Tkinter.Canvas(resultFrame, bg = 'red')
+# 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "heights.gif")):
+# 		heightPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "heights.gif"))
+# 		heightCanvas.create_image(0,0,image= heightPic)
+# 	else: 
+# 		# make question mark
+# 		heightCanvas.create_image(0,0,image = qmark)
+# 		pass
+# 	heightCanvas.grid(row = 2, column = 1)
+# 	heightScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
+# 	heightScroll.grid(row = 3, column = 1)
+# 	heightCanvas.config(xscrollcommand = heightScroll.set)
+# 	heightScroll.config(command = heightCanvas.xview)
+
+# 	# angles
+# 	angleCanvas = Tkinter.Canvas(resultFrame, bg = 'green')#, width = 400, height = 400)
+# 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "angles.gif")):
+# 		anglePic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "angles.gif"))
+# 		angleCanvas.create_image(0,0,image= anglePic)
+# 	else: 
+# 		# make question mark
+# 		angleCanvas.create_image(0,0, image = qmark)
+# 		pass
+# 	angleCanvas.grid(row = 2, column = 2)
+# 	angleScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
+# 	angleScroll.grid(row = 3, column = 2)
+# 	angleCanvas.config(xscrollcommand = angleScroll.set)
+# 	angleScroll.config(command = angleCanvas.xview)
+# 	#if compared, add text area of results
+# 	if compared:
+# 		# TODO - text area on midright that shows missed/extra hits, and average error in each thing
+# 		pass
+# 	#home & quit button
+# 	homeButton = Tkinter.Button(resultFrame, text = "HOME", command = viewInit)
+# 	quitButton = Tkinter.Button(resultFrame, text = "QUIT", command = quit)
+# 	homeButton.grid(row = 0, column = 10)
+# 	quitButton.grid(row = 1, column = 10)
+''' same as above but using label instead of canvas '''
 def showResults(compared):
 	# print cfg.userHits.shape
 	# generate grid + canvas in each area
