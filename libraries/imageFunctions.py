@@ -51,48 +51,65 @@ def getDistance(image, hsv1, hsv2, scale =1):
         return math.sqrt((x1-x2)^2 + (y1-y2)^2)* scale
     else:
         return None
-''' get angle of single stick.  hsv1 and hsv2 correlate to stick hsv thresholds'''
-def getAngle(image, hsv1, hsv2, right = False):
-    x1, y1, pts1 = findCenter(image, hsv1[0], hsv1[1])
-    y1 = image.shape[0]- y1
-    x2, y2, pts2 = findCenter(image, hsv2[0], hsv2[1])
-    # x2, y2 = mat2coord(image.shape, x1,y1)
-    y2 = image.shape[0]- y2
+# ''' get angle of single stick.  hsv1 and hsv2 correlate to stick hsv thresholds'''
+# def getAngle(image, hsv1, hsv2, right = False):
+#     x1, y1, pts1 = findCenter(image, hsv1[0], hsv1[1])
+#     y1 = image.shape[0]- y1
+#     x2, y2, pts2 = findCenter(image, hsv2[0], hsv2[1])
+#     # x2, y2 = mat2coord(image.shape, x1,y1)
+#     y2 = image.shape[0]- y2
 
-    # print "{0}, {1}".format(x2, y2)
-    if not isNan(x1) and not isNan(x2) and min(pts1, pts2)> config.ptsThresh:
+#     # print "{0}, {1}".format(x2, y2)
+#     if not isNan(x1) and not isNan(x2) and min(pts1, pts2)> config.ptsThresh:
 
-        y1 = image.shape[0]-y1
-        y2 = image.shape[0]-y2
+#         y1 = image.shape[0]-y1
+#         y2 = image.shape[0]-y2
 
-        if right:
-            if x2 < x1:
-                return math.degrees(math.atan((x1-x2)/math.fabs(y2-y1)))
-            # stick not pointed towards center in this case
-            else:
-                return None
-        # for left stick
-        else:
-            if x2 > x1:
-                return math.degrees(math.atan((x2-x1)/math.fabs(y2-y1)))
-            else:
-                return None
-        # slope = (y1-y2)/(x1-x2)
-        # # print "DEBUG MODE SLOPE IS {}".format(slope)
-        # # print  math.degrees(math.atan(slope))
-        # return math.degrees(math.atan(slope))
+#         if right:
+#             if x2 < x1:
+#                 return math.degrees(math.atan((x1-x2)/math.fabs(y2-y1)))
+#             # stick not pointed towards center in this case
+#             else:
+#                 return None
+#         # for left stick
+#         else:
+#             if x2 > x1:
+#                 return math.degrees(math.atan((x2-x1)/math.fabs(y2-y1)))
+#             else:
+#                 return None
+#         # slope = (y1-y2)/(x1-x2)
+#         # # print "DEBUG MODE SLOPE IS {}".format(slope)
+#         # # print  math.degrees(math.atan(slope))
+#         # return math.degrees(math.atan(slope))
+#     else:
+#         return None
+
+def getAngle(image, stick_upper,stick_lower, tip_upper, tip_lower):
+    xS, yS, ptsS = findCenter(image, stick_lower, stick_upper)
+    xT, yT, ptsT = findCenter(image, tip_lower, tip_upper)
+    # make vector-ish 
+    dx = math.fabs(xS-xT)
+    dy = math.fabs(yS-yT)
+
+    if dy != 0:
+        return math.atan(dx/dy)
     else:
         return None
+
+
 ''' uses config hsv bounds to find angle between 2 sticks '''
 def stickAngle(image):
-    angleR = getAngle(image, np.vstack((config.stickR_lower, config.stickR_upper)), np.vstack((config.tipR_lower, config.tipR_upper)), right = True)
-    angleL = getAngle(image, np.vstack((config.stickL_lower, config.stickL_upper)), np.vstack((config.tipL_lower, config.tipL_upper)))
+    # angleR = getAngle(image, np.vstack((config.stickR_lower, config.stickR_upper)), np.vstack((config.tipR_lower, config.tipR_upper)), right = True)
+    # angleL = getAngle(image, np.vstack((config.stickL_lower, config.stickL_upper)), np.vstack((config.tipL_lower, config.tipL_upper)))
+
+    angleR = getAngle(image, config.stickR_upper, config.stickR_lower, config.tipR_upper, config.tipR_lower)
+    angleL = getAngle(image, config.stickL_upper, config.stickL_lower, config.tipL_upper, config.tipL_lower)
     print angleR
     print angleL
     if angleR is None or angleL is None:
         return None
     else:
-        return angleR+angleL
+        return math.degrees(angleR+angleL)
 
 def dist(x1,y1,x2,y2, scale = 1):
     return math.sqrt(math.pow(x1-x2,2) + math.pow(y1-y2,2))* scale
@@ -140,41 +157,12 @@ def ohProcess(vidPath, fs = 120):
         ang= stickAngle(image)
         angles= np.hstack((angles, np.array([[timestep*fc], [ang]])))
         fc = fc+1
+        if '-d' in sys.argv:
+            cv2.imshow('OHView', image)
         cv2.waitKey(1)
+
+    if '-d' in sys.argv:
+        cv2.destroyWindow('SideView')
     return angles
-
-# ''' Uses default user webcam to show images, and possibly write to file as well'''
-# def webCamRun(saving = False, showing = False):
-#     cap = cv2.VideoCapture(0)
-#     _, frame = cap.read()
-#     print "At start of webCamRun"
-#     if saving:
-#         print "initializing VideoWriter"
-#         vid = cv2.VideoWriter(os.path.join(config.userPath, config.userFolder, 'CamView.avi'), fourcc = cv2.CV_FOURCC('H','2','6','4'), fps = 30, frame_size = frame.shape)
-#         suc = vid.open()
-#     while(config.recording or config.playing):
-#         print "in collection loop"
-#         _, frame = cap.read()
-#         if showing:
-#             # cv2.imshow('Webcam image', frame)
-#             pass
-#         if saving:
-#             vid.write(frame)
-    
-
-
-
-# ''' Thread for showing webcam footage, and possibly saving it to file '''
-# class webCam(threading.Thread):
-#     def __init__(self, threadID, name, saving, showing):
-#         threading.Thread.__init__(self)
-#         self.threadID = threadID
-#         self.name = name
-#         self.saving = saving
-#         self.showing = showing
-#         print "Im initialized!"
-#     def run(self):
-#         print "IN start"
-#         webCamRun(self.saving, self.showing)
 
 
