@@ -71,8 +71,8 @@ int hitCheck(int pin){
 //    Serial.println(diff);
     prevVal[pin] = currVal;
 //    Serial.println(currVal);
-    return localMin(pin, currVal);
-//      return currVal;
+//    return localMin(pin, currVal);
+      return currVal;
   }
   prevVal[pin] = currVal;
   currentTime = micros();

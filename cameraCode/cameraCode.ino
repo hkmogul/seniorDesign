@@ -37,39 +37,7 @@ void loop()
       ;
     }
     delay(20);
-//    if(Serial){
-//      while(Serial.available()){
-//        character = Serial.read();
-//        content.concat(character);
-//      }
-//      Serial.flush();
-      // check if this turns on the cameras-
-//      if(content.length() > 2 && content.charAt(0) == 'W'){
-//        // parse tempo from 
-//        state = !state;
-//        period = content.substring(1).toInt();
-//
-//        analogWrite(gate, 255);
-//        delay(200);
-//        analogWrite(gate, 0);
-//        content ="";
-//        timeElapsed = 0; // reset timer when we start
-//      }
-//      if(content.length() > 2){
-//        // parse tempo from 
-//        state = !state;
-//        tempo = content.toInt();
-//        period = 60000/tempo;
-//        analogWrite(gate, 255);
-//        delay(200);
-//        analogWrite(gate, 0);
-//        content ="";
-//        timeElapsed = 0; // reset timer when we start
-//      }
-// else, this is a garbage message and we should ignore it and reset
-//      else{
-//        content = "";
-//      }
+
       // read two bytes and get temporary interval.  if it passes some threshold (idk) its good
       if(Serial.available()){
         if(Serial.read() =='W'){
@@ -84,19 +52,28 @@ void loop()
           period = temp;
           timeElapsed=0;
           metroTime = 0;
+          Serial.println("NEW TEMPO");
+          Serial.println(period);
         }
 //          if( temp > 100)
       }
       if( timeElapsed > period){
         digitalWrite(ledPin, HIGH);
+        Serial.println("1 ");
+//        Serial.print(timeElapsed);
         metroTime = 0;
+        timeElapsed = 0;
         delay(10); // so it doesnt immediately turn off 
       }
       else{
         digitalWrite(ledPin, LOW);
+        Serial.println("0 ");
+//        Serial.print(timeElapsed);
 
       }
-      Serial.println(period);
+//      Serial.println(timeElapsed);
+//      Serial.println("--");
+//      Serial.println(period);
       
 
 }
