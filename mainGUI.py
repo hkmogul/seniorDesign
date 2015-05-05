@@ -65,11 +65,11 @@ def viewInit():
 	clearOut(root)
 	cfg.resetAll()
 	reset()
-	frameI = Tkinter.Frame(root)
+	frameI = Tkinter.Frame(root, bg = 'gray')
 	frameI.pack()
-	label = Tkinter.Label(frameI, text = "DRUM TRAINER PROGRAM", relief = Tkinter.RAISED)
+	label = Tkinter.Label(frameI, text = "DRUM TRAINER PROGRAM", font = ('Cooper Bold', 16))
 	label.grid(row = 0, column = 1)
-	button0 = Tkinter.Button(frameI, text = "Record new Example", command = option0)
+	button0 = Tkinter.Button(frameI, text = "Record new Example", command = option0, fg = 'gray')
 	button0.grid(row = 1, column = 1)
 
 	button1 = Tkinter.Button(frameI, text = "Review Existing Attempt", command = option1)
@@ -132,10 +132,14 @@ def option0():
 	unoBox = Tkinter.Listbox(frame0, selectmode = Tkinter.SINGLE, width = 75)
 	for address in serialList:
 		unoBox.insert(Tkinter.END, address)
+	if unoD is not -1:
+		unoBox.select_set(unoD)
 	megaLabel = Tkinter.Label(frame0, text = "Address of Mega (Sensor Reader)").grid(row = 9, column = 0)
 	megaBox = Tkinter.Listbox(frame0, selectmode = Tkinter.SINGLE, width = 75)
 	for address in serialList:
 		megaBox.insert(Tkinter.END, address)
+	if megaD is not -1:
+		megaBox.select_set(megaD)
 	unoBox.grid(row = 8, column = 3)
 	megaBox.grid(row = 10, column = 3)
 	megaScroll = Tkinter.Scrollbar(frame0, orient = Tkinter.HORIZONTAL)
@@ -208,17 +212,21 @@ def option0_start():
 
 	cfg.userFolder = nameFolder.get()
 	os.mkdir(os.path.join(cfg.userPath, cfg.userFolder))
-
+	# global i
 	if debug:
 		mega = readHits.megaComm(1, "MegaComm", spoof = True)
+		# i += 1
 		uno = readHits.unoComm(2, "UnoComm", spoof = True)
+		# i += 1
 	else:
 		mega = readHits.megaComm(1, "MegaComm", spoof = False)
+		# i += 1
 		uno = readHits.unoComm(2, "UnoComm", spoof = False)
+		# i += 1
 
 	uno.start()
 	# time.sleep(.0001)
-	root.after(10)
+	root.after(1)
 	# web.start()
 	mega.start()
 	# run opencv vidcapture in main thread
@@ -579,8 +587,11 @@ def option2_start():
 	nowRecording = Tkinter.Label(frame0A, text = "FINISHED RECORDING", bg = 'YELLOW', font = ('Helvetica', 72)).grid()
 
 	#time.sleep(0.1)
-	mega = readHits.megaComm(1, "MegaComm", spoof = True)
-	uno = readHits.unoComm(2, "UnoComm", spoof = True)
+	global i
+	mega = readHits.megaComm(i, "MegaComm", spoof = True)
+	i += 1
+	uno = readHits.unoComm(i, "UnoComm", spoof = True)
+	i += 1
 	uno.start()
 	time.sleep(.0001)
 	mega.start()
@@ -690,85 +701,7 @@ def synthMode():
 	backButt = Tkinter.Button(synthFrame, text = 'BACK', command = stopThread)
 	backButt.grid(row = 1, column = 0)
 ''' for showing results '''	
-# def showResults(compared):
-# 	# print cfg.userHits.shape
-# 	# generate grid + canvas in each area
-# 	# check that file exists for each, then show
-# 	# if not, show question mark bitmap
-# 	clearOut(root)
-# 	resultFrame = Tkinter.Frame(root)
-# 	resultFrame.grid()
-# 	qmark = Tkinter.PhotoImage("bin/qmark.png")
-# 	#the general sheet music style image
-# 	# TODO: make it scrollable
-# 	genCanvas = Tkinter.Canvas(resultFrame, bg = 'blue')
-# 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif")):
-# 		genPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif"))
-# 		genCanvas.create_image(0,0,image= genPic)
-# 	else: 
-# 		genCanvas.create_image(0,0, image = qmark)
-# 		pass
-# 	genCanvas.grid(row = 0, column = 0)
-# 	genScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
-# 	genScroll.grid(row = 1, column = 0)
-# 	genCanvas.config(xscrollcommand = genScroll.set)
-# 	genScroll.config(command = genCanvas.xview)
 
-# 	# locations
-# 	locCanvas = Tkinter.Canvas(resultFrame, bg = 'gray')#, width = 400, height = 400)
-# 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "locations.gif")):
-
-# 		locPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "locations.gif"))
-# 		locCanvas.create_image(0,0,image= locPic)
-# 	else: 
-# 		# make question mark
-# 		print "HELLO WORLD"
-# 		locCanvas.create_image(0,0, image = qmark)
-# 		pass
-# 	locCanvas.grid(row = 2, column = 0)
-# 	locScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
-# 	locScroll.grid(row = 3, column = 0)
-# 	locCanvas.config(xscrollcommand = locScroll.set)
-# 	locScroll.config(command = locCanvas.xview)
-# 	#heights
-# 	heightCanvas = Tkinter.Canvas(resultFrame, bg = 'red')
-# 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "heights.gif")):
-# 		heightPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "heights.gif"))
-# 		heightCanvas.create_image(0,0,image= heightPic)
-# 	else: 
-# 		# make question mark
-# 		heightCanvas.create_image(0,0,image = qmark)
-# 		pass
-# 	heightCanvas.grid(row = 2, column = 1)
-# 	heightScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
-# 	heightScroll.grid(row = 3, column = 1)
-# 	heightCanvas.config(xscrollcommand = heightScroll.set)
-# 	heightScroll.config(command = heightCanvas.xview)
-
-# 	# angles
-# 	angleCanvas = Tkinter.Canvas(resultFrame, bg = 'green')#, width = 400, height = 400)
-# 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "angles.gif")):
-# 		anglePic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "angles.gif"))
-# 		angleCanvas.create_image(0,0,image= anglePic)
-# 	else: 
-# 		# make question mark
-# 		angleCanvas.create_image(0,0, image = qmark)
-# 		pass
-# 	angleCanvas.grid(row = 2, column = 2)
-# 	angleScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
-# 	angleScroll.grid(row = 3, column = 2)
-# 	angleCanvas.config(xscrollcommand = angleScroll.set)
-# 	angleScroll.config(command = angleCanvas.xview)
-# 	#if compared, add text area of results
-# 	if compared:
-# 		# TODO - text area on midright that shows missed/extra hits, and average error in each thing
-# 		pass
-# 	#home & quit button
-# 	homeButton = Tkinter.Button(resultFrame, text = "HOME", command = viewInit)
-# 	quitButton = Tkinter.Button(resultFrame, text = "QUIT", command = quit)
-# 	homeButton.grid(row = 0, column = 10)
-# 	quitButton.grid(row = 1, column = 10)
-''' same as above but using label instead of canvas '''
 def showResults(compared):
 	# print cfg.userHits.shape
 	# generate grid + canvas in each area
@@ -777,7 +710,7 @@ def showResults(compared):
 	clearOut(root)
 	resultFrame = Tkinter.Frame(root)
 	resultFrame.grid()
-	qmark = Tkinter.PhotoImage("bin/qmark.png")
+	qmark = Tkinter.PhotoImage("qmark.gif")
 	#the general sheet music style image
 	# TODO: make it scrollable
 	genCanvas = Tkinter.Canvas(resultFrame, bg = 'blue')
