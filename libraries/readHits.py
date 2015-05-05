@@ -23,6 +23,7 @@ names = ['C','D','E','F','G','A','B','C','E']
 def parseInput(timeStart, input = None):
     if input is '':
         return None
+    print input
     # get time first to mitigate delays- convert to millis to prevent overflow
     # timeDiff = (timeStart - time.time()).microseconds/1000
     # print time.time()
@@ -69,15 +70,16 @@ def pos2Num(x,y):
     else:
         return x+7
 def synthComm():
-
+    # print "I AM IN synthComm"
     timeStart = time.time()
     fluidsynth.init(config.sf2Path)
 
     note = Note()
     ser = serial.Serial(config.megaPath, config.megaBaud,timeout = 1)
-
-    while config.playing and '-d' in sys.argv:
+    fluidsynth.stop_Note(note)
+    while config.playing:
         info = ser.readline()
+        print info
         if info is not '' and len(info) == 9:
             # print info
             # print timeStart
@@ -97,10 +99,13 @@ def synthComm():
             print "-----"
             print "Time: {0} \nPosition: {1},{2}\n Velocity: {3}".format(timeElp, x, y, vel)
             print "-----"
+        else:
+            fluidsynth.stop_Note(note)
 
                 # config.userHits = np.hstack((config.userHits, np.array([[time],[vel],[x],[y])))
     # when done, close out connection
     ser.close()
+    # print " I HAVE CLOSED THE connection"
     return
 
 class megaSynth(threading.Thread):
@@ -110,8 +115,10 @@ class megaSynth(threading.Thread):
         self.name = name
         self.notStore = notStore
         self.spoof = spoof
+        print "HELLO WORLD I AM INSTANTIATED"
     def run(self):
         if not self.spoof:
+            print "HELLO WORLD I RUN NOWs"
             synthComm()
 class megaComm(threading.Thread):
     def __init__(self, threadID, name, notStore = True, spoof = False):
@@ -168,6 +175,22 @@ class unoComm(threading.Thread):
             comm.write("{} ".format(19))
             comm.write("{} \n".format(155))
             comm.close()
+
+''' find indices of defaults for uno and mega- uno ends in 51, mega ends in 11 '''
+def defaults(mylist):
+    uno = -1
+    foundUno = False
+    mega = -1
+    foundMega = False
+    for index, port in enumerate(mylist):
+        if port[-2:] is '51' and not foundUno:
+            uno = index
+        elif port[-2:] is '11' and not foundMega:
+            mega = index
+        if foundUno and foundMega:
+            break
+    return uno, mega
+
 ''' I didnt write this, but its really useful '''
 def serial_ports():
     """Lists serial ports
