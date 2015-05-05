@@ -37,20 +37,20 @@ extra = np.empty((4,0)) # extra hits
 # tipR_upper = np.array([179,255,255])
 # BRIGHT YELLOW GAFF
 # orig hsv 42, 192, 198
-tipR_lower = np.array([30,75,150])
-tipR_upper = np.array([45,255,255])
+tipR_lower = np.array([27,50,100])
+tipR_upper = np.array([52,255,255])
 
 
 #lower and upper bounds for band of Right stick
 # GREEN GAFF- 69, 165, 191
-stickR_lower = np.array([60,75,150])
-stickR_upper = np.array([85,255,220])
+stickR_lower = np.array([65,100,150])
+stickR_upper = np.array([100,255,255])
 
 
 # lower and upper bounds for tip of Left stick
 # PINK- 161,164,255
-tipL_lower = np.array([150,60,200])
-tipL_upper = np.array([167,200,255])
+tipL_lower = np.array([140,40,200])
+tipL_upper = np.array([170,240,255])
 #lower and upper bounds for band of Left stick
 # ORANGE - 2, 184, 252
 stickL_lower = np.array([1,155,155])

@@ -49,13 +49,13 @@ def pad_lesser(gt, data):
 
 ''' Returns error on each hit from ground truth in 4xN array of error of each
     AKA not time based array
-    Missed hit = time error of -1000
+    Missed hit = time error of -5000
     Error argument = window to allow checking for time things around an area
     (in milliseconds)
     gt = ground truth
     userdata= user input
 '''
-def gradeRef(gt, userdata, error = 50):
+def gradeRef(gt, userdata, error = 499):
     results = np.zeros(gt.shape)
     data = np.copy(userdata)
     found = False
@@ -74,7 +74,7 @@ def gradeRef(gt, userdata, error = 50):
                 data = np.delete(data, j, 1)
                 break;
         if not found:
-            results[0][i] = -1000
+            results[0][i] = -5000
     # return results and remaining data to denote extra hits
     return results, data
 ''' make sheet music style printout 
@@ -84,13 +84,15 @@ def gradeRef(gt, userdata, error = 50):
 '''
 def pltGeneral(userdata, gt = None, debug = False, sig = 4):
     plt.clf()
+    w = int(userdata.shape[1]/20)
     # length of figure based on # of hits?
-    plt.figure(figsize=(24,6), dpi = 80)
+    plt.figure(figsize=(w,3), dpi = 60)
+
     if debug:
         tempo = 120
     else:
         tempo = cfg.tempo
-    interval =60000/tempo
+    interval =60E3/tempo
     # user = plt.stem(userdata[0], userdata[1])
     user = plt.plot(userdata[0], userdata[1], 'o')
     plt.legend()
@@ -105,27 +107,35 @@ def pltGeneral(userdata, gt = None, debug = False, sig = 4):
     ymax = plt.axis()[3]
     plt.xlabel("Time (ms)")
     plt.ylabel("Velocity (MIDI Style)")
-    vRange = np.arange(0,end, interval)
-    mesRange = np.arange(0,end,interval*sig)
-    plt.vlines(vRange, 0, 127, linestyles = 'dashed')
+    # vRange = np.arange(0,end, interval) # beats
+    mesRange = np.arange(0,end,interval*sig) # measures
+    # ax.set_yscale('log')
+    # plt.vlines(vRange, 0, 127, linestyles = 'dashed')
     plt.vlines(mesRange, 0 ,127)
 
     if debug:
         plt.savefig('hitSheet.gif')
     else:
-        plt.savefig(os.path.join(cfg.userpath, 'hitSheet.gif'))
+        plt.savefig(os.path.join(cfg.userPath, cfg.userFolder, 'hitSheet.gif'))
     return
 ''' scatterplot of positions
 TODO: size of points based on # of hits
  '''
 def pltLocations(userdata, gt = None, debug = False):
     plt.clf()
+    fig = plt.figure(figsize=(3,3), dpi = 60)
     x = [-1,0,1,-1,0,1,-1,0,1]
     y = [1,1,1,0,0,0,-1,-1,-1]
-    scale = math.fabs(-500*math.atan(userdata.shape[1]+3000)+600)
+    # scale = math.fabs(-500*math.atan(userdata.shape[1]+1000)+600)
     # user = plt.scatter(userdata[2], userdata[3])
+    print userdata.shape[1]
+    if userdata.shape[1] == 0:
+        scale = 1
+    else:
+        scale = 20-20/userdata.shape[1]
     userAmt = positionAmts(userdata)
     userSize = userAmt*int(scale)
+    print "User Amt: {}".format(userAmt)
     # userSize = np.power(userAmt,2) * int(-1*math.atan(userdata.shape[1]/3-100)+11.5)
     print "Scale : {}".format(scale)
     print "User size : {}".format(userSize)
@@ -140,26 +150,28 @@ def pltLocations(userdata, gt = None, debug = False):
         print "gtSize: {}".format(gtSize)
 
         gt = plt.scatter(x, y, s= gtSize, c = u'b', alpha = 0.5)
-    plt.axis([-2,2,-2,2])
+    plt.axis([-1.5,1.5,-1.5,1.5])
     if debug:
         plt.savefig('locations.gif')
     else:
         plt.savefig(os.path.join(cfg.userpath, 'locations.gif'))
     return
 
-def sizePlot():
-    x = np.arange(-5000,5000)
-    # print x[4995:5005]
-    scale = -10*(np.arctan(x*.001))
-    print np.amax(scale)
-    print scale[4995:5005]
-    plt.plot(x,scale)
-    plt.savefig('scale.gif')
+# def sizePlot():
+#     x = np.arange(-5000,5000)
+#     # print x[4995:5005]
+#     scale = -10*(np.arctan(x*.001))
+#     print np.amax(scale)
+#     print scale[4995:5005]
+#     plt.plot(x,scale)
+#     plt.savefig('scale.gif')
 
 ''' heights vs time '''
 def pltHeights(userdata, gt = None, debug = False):
     plt.clf()
+    fig = plt.figure(figsize = (3,3), dpi = 60)
     user = plt.plot(userdata[0], userdata[1])
+
     if gt is not None:
         gtdata = plt.plot(gt[0],gt[1], 'g')
     if debug:
@@ -183,7 +195,7 @@ def pltAngles(userdata, gt= None, debug = False):
 def empty(mat):
     return mat.shape[1] is 0
 
-''' Does all images using global files
+''' Does all images and performance analysisusing global files
     alone = True if not compared to GT
  '''
 def wholeShebang(alone):
@@ -231,8 +243,9 @@ def dblWhere(data, x,y):
     n = np.logical_and(m[0], m[1])
     # print "n is {}".format(n)
     return np.sum(n)
-''' returns length 9 vector corresponding to amount of hits in each locations
 
+
+''' returns length 9 vector corresponding to amount of hits in each locations
 '''
 def positionAmts(data):
     amt = np.zeros((9,))

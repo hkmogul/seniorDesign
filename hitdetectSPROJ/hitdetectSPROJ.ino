@@ -14,7 +14,7 @@ float elapsedTime = 1;
 float currentTime;
 
 int currVal;
-int hits;
+//int hits;
 long slope;
 int diff;
 // Thresholds go here
@@ -45,6 +45,18 @@ String val2vel(int val){
     return s;
   }
 }
+
+int localMin(int pin, int prevVal){
+    currVal = analogRead(pin);
+    if(currVal < prevVal){
+      // continue checking
+      return localMin(pin, currVal);
+    }
+    else{
+      return prevVal;
+    }
+}
+
 int hitCheck(int pin){
   // DETECTION ALGORITHM GOES HERE
   currVal = analogRead(sensePins[pin]);
@@ -54,12 +66,13 @@ int hitCheck(int pin){
   slope = (currVal - prevVal[pin])/elapsedTime;
   
   if(currVal < sensorThresh && diff > diffThresh && currVal < prevVal[pin]/* && slope < slopeThresh */){
-    hits++;
+//    hits++;
 //    Serial.println(slope);
-    Serial.println(diff);
+//    Serial.println(diff);
     prevVal[pin] = currVal;
-    Serial.println(currVal);
-    return currVal;
+//    Serial.println(currVal);
+    return localMin(pin, currVal);
+//      return currVal;
   }
   prevVal[pin] = currVal;
   currentTime = micros();
@@ -74,7 +87,7 @@ void setup() {
 //  xPositions = {-1,0,1,-1,0,1,-1,0,1};
 //  yPositions = {1,1,1,0,0,0,-1,-1,-1};
   currentTime = micros();
-  hits = 0;
+//  hits = 0;
   for(int i  = 0; i <9; i++){
      prevVal[i] = analogRead(sensePins[i]);
   } 
