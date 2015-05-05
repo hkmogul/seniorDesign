@@ -23,7 +23,7 @@ import readHits
 import imageFunctions as img
 import performance_analysis as perf
 import config as cfg
-
+i = 1
 debug = False
 if '-d' in sys.argv:
 	debug = True
@@ -121,6 +121,7 @@ def option0():
 
 	# arduino selection boxes
 	serialList = readHits.serial_ports()
+	unoD, megaD = readHits.defaults(serialList)
 	tempty = []
 	# if serialList == tempty and not debug:
 	# 	tkMessageBox.showinfo('ERROR', 'No serial ports found!')
@@ -666,7 +667,9 @@ def synthMode():
 	synthFrame = Tkinter.Frame(root)
 	synthFrame.grid()
 	# cfg.playing = True
-	synth = readHits.megaSynth(1, "SynthComm", spoof = False)
+	global i
+	synth = readHits.megaSynth(i, "SynthComm", spoof = False)
+	i = i+1
 	def setThread():
 		cfg.playing = True
 		synth.start()
