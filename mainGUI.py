@@ -33,6 +33,8 @@ root= Tkinter.Tk()
 root.title("Drum Trainer")
 root.columnconfigure(0, weight=1)
 userpath = Tkinter.StringVar()
+if debug:
+	userpath.set('/Users/hilarymogul/Desktop')
 gtpath = Tkinter.StringVar()
 tempo = Tkinter.IntVar()
 duration = Tkinter.IntVar()
@@ -47,6 +49,8 @@ def quit():
 def reset():
 	cfg.resetAll()
 	userpath.set('')
+	if debug:
+		userpath.set('/Users/hilarymogul/Desktop')
 	gtpath.set('')
 	tempo.set(40)
 	duration.set(0)
@@ -710,17 +714,17 @@ def showResults(compared):
 	clearOut(root)
 	resultFrame = Tkinter.Frame(root)
 	resultFrame.grid()
-	qmark = Tkinter.PhotoImage("qmark.gif")
+	qmark = Tkinter.PhotoImage(file ="qmark.gif").subsample(2,2)
 	#the general sheet music style image
 	# TODO: make it scrollable
 	genCanvas = Tkinter.Canvas(resultFrame, bg = 'blue')
-	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif")):
-		genPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif"))
-		genCanvas.create_image(0,0,image= genPic)
-	else: 
-		genCanvas.create_image(0,0, image = qmark)
-		pass
 	genCanvas.grid(row = 0, column = 0)
+	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif")):
+		genPic = Tkinter.PhotoImage(file =os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif"))
+		genCanvas.create_image(0,0,image= genPic, anchor = "nw")
+	else: 
+		genCanvas.create_image(0,0, image = qmark, anchor = "nw")
+
 	genScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
 	genScroll.grid(row = 1, column = 0)
 	genCanvas.config(xscrollcommand = genScroll.set)
@@ -728,45 +732,46 @@ def showResults(compared):
 
 	# locations
 	locCanvas = Tkinter.Canvas(resultFrame, bg = 'gray')#, width = 400, height = 400)
+	locCanvas.grid(row = 2, column = 0)
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "locations.gif")):
 
 		locPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "locations.gif"))
-		locCanvas.create_image(0,0,image= locPic)
+		locCanvas.create_image(0,0,image= locPic, anchor = "nw")
 	else: 
 		# make question mark
 		print "HELLO WORLD"
-		locCanvas.create_image(0,0, image = qmark)
-		pass
-	locCanvas.grid(row = 2, column = 0)
+		locCanvas.background = qmark
+		locCanvas.create_image(0,0, image = locCanvas.background, anchor = "nw")
+
 	locScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
 	locScroll.grid(row = 3, column = 0)
 	locCanvas.config(xscrollcommand = locScroll.set)
 	locScroll.config(command = locCanvas.xview)
 	#heights
 	heightCanvas = Tkinter.Canvas(resultFrame, bg = 'red')
+	heightCanvas.grid(row = 2, column = 1)
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "heights.gif")):
 		heightPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "heights.gif"))
-		heightCanvas.create_image(0,0,image= heightPic)
+		heightCanvas.create_image(0,0,image= heightPic, anchor = "nw")
 	else: 
 		# make question mark
-		heightCanvas.create_image(0,0,image = qmark)
-		pass
-	heightCanvas.grid(row = 2, column = 1)
+		image = heightCanvas.create_image(0,0,image = qmark, anchor = "nw")
+
 	heightScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
 	heightScroll.grid(row = 3, column = 1)
 	heightCanvas.config(xscrollcommand = heightScroll.set)
 	heightScroll.config(command = heightCanvas.xview)
 
 	# angles
-	angleCanvas = Tkinter.Canvas(resultFrame, bg = 'green')#, width = 400, height = 400)
+	angleCanvas = Tkinter.Canvas(resultFrame)#, bg = 'green')#, width = 400, height = 400)
+	angleCanvas.grid(row = 2, column = 2)
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "angles.gif")):
 		anglePic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "angles.gif"))
 		angleCanvas.create_image(0,0,image= anglePic)
 	else: 
 		# make question mark
-		angleCanvas.create_image(0,0, image = qmark)
-		pass
-	angleCanvas.grid(row = 2, column = 2)
+		angleCanvas.create_image(0,0, image = qmark, anchor = "nw")
+
 	angleScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
 	angleScroll.grid(row = 3, column = 2)
 	angleCanvas.config(xscrollcommand = angleScroll.set)
