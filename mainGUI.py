@@ -721,9 +721,11 @@ def showResults(compared):
 	genCanvas.grid(row = 0, column = 0)
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif")):
 		genPic = Tkinter.PhotoImage(file =os.path.join(cfg.userPath, cfg.userFolder, "hitSheet.gif"))
-		genCanvas.create_image(0,0,image= genPic, anchor = "nw")
+		genCanvas.background = genPic
+		genCanvas.create_image(0,0,image= genCanvas.background, anchor = "nw")
 	else: 
-		genCanvas.create_image(0,0, image = qmark, anchor = "nw")
+		genCanvas.background = qmark
+		genCanvas.create_image(0,0, image = genCanvas.background, anchor = "nw")
 
 	genScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
 	genScroll.grid(row = 1, column = 0)
@@ -736,10 +738,11 @@ def showResults(compared):
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "locations.gif")):
 
 		locPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "locations.gif"))
+		locCanvas.background = locPic
 		locCanvas.create_image(0,0,image= locPic, anchor = "nw")
 	else: 
 		# make question mark
-		print "HELLO WORLD"
+		# print "HELLO WORLD"
 		locCanvas.background = qmark
 		locCanvas.create_image(0,0, image = locCanvas.background, anchor = "nw")
 
@@ -752,6 +755,7 @@ def showResults(compared):
 	heightCanvas.grid(row = 2, column = 1)
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "heights.gif")):
 		heightPic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "heights.gif"))
+		heightCanvas.background = heightPic
 		heightCanvas.create_image(0,0,image= heightPic, anchor = "nw")
 	else: 
 		# make question mark
@@ -767,10 +771,13 @@ def showResults(compared):
 	angleCanvas.grid(row = 2, column = 2)
 	if os.path.isfile(os.path.join(cfg.userPath, cfg.userFolder, "angles.gif")):
 		anglePic = Tkinter.PhotoImage(os.path.join(cfg.userPath, cfg.userFolder, "angles.gif"))
-		angleCanvas.create_image(0,0,image= anglePic)
+		angleCanvas.background = anglePic
+
+		angleCanvas.create_image(0,0,image= angleCanvas.background)
 	else: 
 		# make question mark
-		angleCanvas.create_image(0,0, image = qmark, anchor = "nw")
+		angleCanvas.background = qmark
+		angleCanvas.create_image(0,0, image = angleCanvas.background, anchor = "nw")
 
 	angleScroll = Tkinter.Scrollbar(resultFrame, orient = Tkinter.HORIZONTAL)
 	angleScroll.grid(row = 3, column = 2)

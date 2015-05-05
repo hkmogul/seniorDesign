@@ -42,10 +42,11 @@ while(1):
         pass
     resSmall = cv2.resize(res, (0,0), fx = 0.5, fy = 0.5)
     cv2.imshow('frame',resSmall)
+    hl, hr = img.getHeights(frame)
     # cv2.imshow('image', frame)
     # if not img.isNan(xR) and not img.isNan(xL) and ptsR > 500 and ptsL > 500:
     #     print "Distance between tips: {0}".format(img.dist(xR.item(),yR.item(),xL.item(),yL.item()))
-    print "Angle between sticks: {0}".format(img.stickAngle(frame))
+    print "Height of sticks: {0}, {1}".format(hl, hr)
         # print "Distance between objects: {0}".format(img.dist(xR,yR,xL,yL))
 
     k = cv2.waitKey(5) & 0xFF

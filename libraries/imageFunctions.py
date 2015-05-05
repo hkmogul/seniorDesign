@@ -33,13 +33,17 @@ Return height of point on scale (in pixels for now)
 HSV = vstack of lower;upper thresholds for color to detect
 return None if the color in question can't be found
 '''
-def getHeightRaw(image, hsv, scale =1):
-    x, y, pts = findCenter(image, hsv[0],hsv[1])
+def getHeightRaw(image, hsvL, hsvU, scale =1):
+    x, y, pts = findCenter(image, hsvL,hsvU)
     if isNan(x) or pts < config.ptsThresh:
         return -1
     else:
         return (image.shape[0]-y)*scale
 
+def getHeights(image, scale = 1):
+    right = getHeightRaw(image, config.tipR_lower, config.tipR_upper, scale = scale)
+    left = getHeightRaw(image, config.tipL_lower, config.tipL_upper, scale = scale)
+    return left, right
 '''
 Find positions of two color ranges,
 calculate distance from each other
@@ -104,8 +108,8 @@ def stickAngle(image):
 
     angleR = getAngle(image, config.stickR_upper, config.stickR_lower, config.tipR_upper, config.tipR_lower)
     angleL = getAngle(image, config.stickL_upper, config.stickL_lower, config.tipL_upper, config.tipL_lower)
-    print angleR
-    print angleL
+    # print angleR
+    # print angleL
     if angleR is None or angleL is None:
         return None
     else:
@@ -135,10 +139,10 @@ def sideProcess(vidPath, fs = 120):
 
         heights = np.hstack((heights, np.array([[timestep*fc],[hL],[hR]])))
         fc = fc+1
-        if '-d' in sys.argv:
+        if '-s' in sys.argv:
             cv2.imshow('SideView', image)
         cv2.waitKey(1)
-    if '-d' in sys.argv:
+    if '-s' in sys.argv:
         cv2.destroyWindow('SideView')
 
     return heights
@@ -157,12 +161,10 @@ def ohProcess(vidPath, fs = 120):
         ang= stickAngle(image)
         angles= np.hstack((angles, np.array([[timestep*fc], [ang]])))
         fc = fc+1
-        if '-d' in sys.argv:
+        if '-s' in sys.argv:
             cv2.imshow('OHView', image)
         cv2.waitKey(1)
 
-    if '-d' in sys.argv:
+    if '-s' in sys.argv:
         cv2.destroyWindow('SideView')
     return angles
-
-
