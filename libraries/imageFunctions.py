@@ -110,10 +110,33 @@ def stickAngle(image):
     angleL = getAngle(image, config.stickL_upper, config.stickL_lower, config.tipL_upper, config.tipL_lower)
     # print angleR
     # print angleL
+
     if angleR is None or angleL is None:
         return None
     else:
+        # print angleR+angleL
+        # print vecAngle(image)
         return math.degrees(angleR+angleL)
+
+''' uses vector geometry to find the angle between the sticks instead '''
+def vecAngle(image):
+    def dotproduct(v1, v2):
+        return sum((a*b) for a, b in zip(v1, v2))
+
+    def length(v):
+        return math.sqrt(dotproduct(v, v))
+
+    def angle(v1, v2):
+        return math.acos(dotproduct(v1, v2) / (length(v1) * length(v2)))
+    xRS, yRS, ptsRS = findCenter(image, config.stickR_lower, config.stickR_upper)
+    xRT, yRT, ptsRT = findCenter(image, config.tipR_lower, config.tipR_upper)
+    xLS, yLS, ptsLS = findCenter(image, config.stickL_lower, config.stickL_upper)
+    xLT, yLT, ptsLT = findCenter(image, config.tipL_lower, config.tipL_upper)
+
+    vR= [(xRT-xRS), (yRT-yRS)]
+    vL= [(xLT-xLS), (yLT-yLS)] 
+    
+    return math.degrees(angle(vR, vL))
 
 def dist(x1,y1,x2,y2, scale = 1):
     return math.sqrt(math.pow(x1-x2,2) + math.pow(y1-y2,2))* scale
@@ -134,10 +157,9 @@ def sideProcess(vidPath, fs = 120):
         if ret is False:
             cap.release()
             break
-        hL= getHeightRaw(image, np.vstack((config.tipL_lower, config.tipL_upper)))
-        hR= getHeightRaw(image, np.vstack((config.tipR_lower, config.tipR_upper)))
+        hl, hr= getHeights(image)
 
-        heights = np.hstack((heights, np.array([[timestep*fc],[hL],[hR]])))
+        heights = np.hstack((heights, np.array([[timestep*fc],[hl],[hr]])))
         fc = fc+1
         if '-s' in sys.argv:
             cv2.imshow('SideView', image)
@@ -158,13 +180,16 @@ def ohProcess(vidPath, fs = 120):
         if ret is False:
             cap.release()
             break
-        ang= stickAngle(image)
+        # ang= stickAngle(image)
+        ang = vecAngle(image)
         angles= np.hstack((angles, np.array([[timestep*fc], [ang]])))
         fc = fc+1
         if '-s' in sys.argv:
-            cv2.imshow('OHView', image)
+            cv2.imshow('OHView', cv2.resize(image, (0,0), fx = 0.5, fy = 0.5))
+        if '-d' in sys.argv:
+            print ang
         cv2.waitKey(1)
 
     if '-s' in sys.argv:
-        cv2.destroyWindow('SideView')
+        cv2.destroyWindow('OHView')
     return angles
